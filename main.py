@@ -103,7 +103,7 @@ def rewrite_article_with_ai(original_title):
     
     try:
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-flash-latest',
             contents=prompt
         )
         text = response.text
