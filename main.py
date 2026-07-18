@@ -22,7 +22,7 @@ WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
 # Configure Gemini
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-pro')
 
 # Hindu Religion & Spirituality RSS Feed (ABP Live Religion)
 RSS_FEED_URL = "https://www.abplive.com/lifestyle/religion/feed"
