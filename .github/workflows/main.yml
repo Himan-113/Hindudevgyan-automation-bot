@@ -42,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-            - name: Run Automation Bots
+      - name: Run HinduDevGyan Automation Empire
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           WP_URL: ${{ secrets.WP_URL }}
@@ -51,4 +51,6 @@ jobs:
         run: |
           python main.py
           python gita_bot.py
+          python panchang_bot.py
+          python festival_bot.py
 
