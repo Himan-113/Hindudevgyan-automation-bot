@@ -36,7 +36,7 @@ def get_affiliate_html(category):
                     <strong style="color:#d97706;">5 Mukhi Rudraksha Mala — 108 Beads</strong>
                     <p style="font-size:14px;">Pure Nepali Rudraksha. Enhances focus and brings Lord Shiva's blessings.</p>
                 </div>
-                <a href="#" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹399 - Buy on Amazon</a>
+                <a href="https://www.amazon.in/s?k=5+mukhi+rudraksha+mala&tag=hindudevgyan-21" target="_blank" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹399 - Buy on Amazon</a>
             </div>
         </div>
         """
@@ -50,7 +50,7 @@ def get_affiliate_html(category):
                     <strong style="color:#d97706;">Brass Puja Thali Set — 7 Piece</strong>
                     <p style="font-size:14px;">Complete brass thali with diya, incense holder, bell and more for daily puja.</p>
                 </div>
-                <a href="#" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹599 - Buy on Amazon</a>
+                <a href="https://www.amazon.in/s?k=brass+puja+thali+set&tag=hindudevgyan-21" target="_blank" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹599 - Buy on Amazon</a>
             </div>
         </div>
         """
@@ -64,7 +64,7 @@ def get_affiliate_html(category):
                     <strong style="color:#d97706;">Pure Copper Kalash with Lid</strong>
                     <p style="font-size:14px;">Auspicious copper vessel for Puja, Kalash Sthapana and daily water offerings.</p>
                 </div>
-                <a href="#" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹349 - Buy on Amazon</a>
+                <a href="https://www.amazon.in/s?k=pure+copper+kalash&tag=hindudevgyan-21" target="_blank" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹349 - Buy on Amazon</a>
             </div>
         </div>
         """
