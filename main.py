@@ -4,7 +4,7 @@ import requests
 import feedparser
 import urllib.parse
 from urllib.parse import urlparse, parse_qs
-import google.generativeai as genai
+from google import genai
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
@@ -21,8 +21,7 @@ WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
 # Configure Gemini
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Hindu Religion & Spirituality RSS Feed (ABP Live Religion)
 RSS_FEED_URL = "https://www.abplive.com/lifestyle/religion/feed"
@@ -103,7 +102,10 @@ def rewrite_article_with_ai(original_title):
     """
     
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt
+        )
         text = response.text
         
         # Parse the response
