@@ -81,7 +81,13 @@ def generate_weekly_festivals():
     2. Provide a 5-6 word URL Slug.
     3. Categorize the article for ecommerce. Choose one: "shiva" or "pooja".
     4. Provide the main article content in beautiful HTML format (using <h2>, <h3>, <p>, and <ul>).
-    5. Generate a highly descriptive English prompt for an AI Image Generator representing the festival or spiritual mood (e.g. "Cinematic vibrant painting of Indian temple celebration, glowing lights, festive atmosphere..."). Do NOT include any text in the image prompt.
+    5. Internal Linking: You MUST naturally weave at least 3 internal HTML links into the article text to build SEO authority. Use this mapping:
+       - Mentions of "Kundli", "Birth Chart", or "Horoscope" -> <a href="https://hindudevgyan.in/free-kundli/">
+       - Mentions of "Vastu" -> <a href="https://hindudevgyan.in/category/vastu/">
+       - Mentions of "Panchang" or "Muhurat" -> <a href="https://hindudevgyan.in/category/panchang/">
+       - Mentions of "Bhagavad Gita" or "Karma" -> <a href="https://hindudevgyan.in/category/gita-wisdom/">
+       - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
+    6. Generate a highly descriptive English prompt for an AI Image Generator representing the festival or spiritual mood (e.g. "Cinematic vibrant painting of Indian temple celebration, glowing lights, festive atmosphere..."). Do NOT include any text in the image prompt.
     
     Format EXACTLY as valid JSON:
     {{

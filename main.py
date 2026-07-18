@@ -108,7 +108,12 @@ def rewrite_article_and_image_prompt(original_title):
     1. Language: The entire article MUST be written in high-quality, premium English.
     2. Headline (H1): Write a highly clickable, English headline. IT MUST BE 100% UNIQUE. Find a creative, spiritual angle.
     3. URL Slug: Generate a 5-6 word English translation of the headline, formatted with hyphens (e.g., significance-of-chhaya-someswara-temple).
-    4. Internal Linking: Naturally embed an HTML link to the homepage (https://hindudevgyan.in) somewhere INSIDE the paragraphs.
+    4. Internal Linking: You MUST naturally weave at least 3 internal HTML links into the article text to build SEO authority. Use this mapping:
+       - Mentions of "Kundli", "Birth Chart", or "Horoscope" -> <a href="https://hindudevgyan.in/free-kundli/">
+       - Mentions of "Vastu" -> <a href="https://hindudevgyan.in/category/vastu/">
+       - Mentions of "Panchang" or "Muhurat" -> <a href="https://hindudevgyan.in/category/panchang/">
+       - Mentions of "Bhagavad Gita" or "Karma" -> <a href="https://hindudevgyan.in/category/gita-wisdom/">
+       - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
     5. Formatting: Use proper HTML headings (<h2>) like "Significance", "Mythology". Use short paragraphs, bold important names/facts, and include at least one bulleted list. 
     6. Category: Determine the ONE best category from this exact list: Mythology, Vedic Wisdom, Daily Sadhana, Festivals & Vrat, Astrology & Horoscope, Temples & Pilgrimage, Mantras & Chants, Spiritual News.
     7. AI Image Prompt: Write a short, highly-descriptive English prompt for an AI Image Generator to create a featured image for this article (e.g. "Cinematic realistic image of Lord Shiva meditating in the Himalayas, golden hour lighting"). Do NOT use text in the image.

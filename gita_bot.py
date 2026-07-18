@@ -29,7 +29,13 @@ def generate_gita_wisdom():
     3. Write a 400-word philosophical explanation of how this applies to modern daily life. Use headings (<h2>) and short paragraphs.
     4. Provide an SEO optimized, highly clickable Headline.
     5. Provide a 5-6 word URL Slug.
-    6. Generate a highly descriptive English prompt for an AI Image Generator (e.g. "Cinematic realistic painting of Arjuna looking at Krishna, divine golden light, beautiful details, 4k"). Do NOT include any text in the image prompt.
+    6. Internal Linking: You MUST naturally weave at least 3 internal HTML links into the article text to build SEO authority. Use this mapping:
+       - Mentions of "Kundli", "Birth Chart", or "Horoscope" -> <a href="https://hindudevgyan.in/free-kundli/">
+       - Mentions of "Vastu" -> <a href="https://hindudevgyan.in/category/vastu/">
+       - Mentions of "Panchang" or "Muhurat" -> <a href="https://hindudevgyan.in/category/panchang/">
+       - Mentions of "Bhagavad Gita" or "Karma" -> <a href="https://hindudevgyan.in/category/gita-wisdom/">
+       - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
+    7. Generate a highly descriptive English prompt for an AI Image Generator (e.g. "Cinematic realistic painting of Arjuna looking at Krishna, divine golden light, beautiful details, 4k"). Do NOT include any text in the image prompt.
     
     Format EXACTLY as valid JSON, with no markdown formatting around it, just raw JSON:
     {
