@@ -69,6 +69,16 @@ def get_affiliate_html(category):
         </div>
         """
 
+def get_ebook_upsell_html():
+    """Digital Product E-Book Mid-Article Injection"""
+    return """
+    <div style="background:#fffbeb; border:2px dashed #f59e0b; padding:25px; border-radius:8px; margin:30px 0; text-align:center;">
+        <h3 style="margin-top:0; color:#b45309; font-size:22px;">Transform Your Home's Energy Today!</h3>
+        <p style="font-size:16px; color:#78350f; margin-bottom:20px;">Discover the ancient secrets to attracting wealth, health, and absolute harmony. Download our premium 5-chapter Vastu Shastra guide instantly.</p>
+        <a href="https://rzp.io/rzp/VtX5q0e" target="_blank" style="display:inline-block; background:#f59e0b; color:#fff; padding:15px 30px; border-radius:30px; font-weight:bold; text-decoration:none; font-size:18px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">Unlock The Vastu Shastra Mastery Guide (₹99)</a>
+    </div>
+    """
+
 def get_kundli_upsell_html():
     """Astrological Upsell Funnel to Premium PDF"""
     return """
@@ -76,7 +86,7 @@ def get_kundli_upsell_html():
         <h3 style="margin-top:0; color:#E8540A;">Curious how today's Nakshatra affects you?</h3>
         <p style="font-size:15px; color:#333; margin-bottom:15px;">Discover your exact career path, marriage compatibility, and planetary dashas based on your exact birth time.</p>
         <a href="/free-kundli" style="display:inline-block; background:#10b981; color:#fff; padding:12px 20px; border-radius:4px; font-weight:bold; text-decoration:none;">Generate Free Vedic Kundli</a>
-        <a href="#" style="display:inline-block; background:#E8540A; color:#fff; padding:12px 20px; border-radius:4px; font-weight:bold; text-decoration:none; margin-left:10px;">Unlock 50-Page Premium PDF (₹149)</a>
+        <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#E8540A; color:#fff; padding:12px 20px; border-radius:4px; font-weight:bold; text-decoration:none; margin-left:10px;">Unlock 50-Page Premium PDF (₹149)</a>
     </div>
     """
 
@@ -228,8 +238,16 @@ def publish_wp_post(data, astro_data, media_id, category_id):
         <p><strong>Tithi:</strong> {tithi}</p>
         <p><strong>Nakshatra:</strong> {nakshatra}</p>
     </div>
-    {data['content_html']}
     """
+    
+    # Inject E-Book CTA directly into the middle of the AI article
+    paragraphs = data['content_html'].split('</p>')
+    if len(paragraphs) > 2:
+        mid_idx = len(paragraphs) // 2
+        paragraphs.insert(mid_idx, get_ebook_upsell_html())
+    mid_injected_html = '</p>'.join(paragraphs)
+    
+    full_content += mid_injected_html
     
     # 2. Inject The E-Commerce Block
     full_content += get_affiliate_html(data['ecommerce_category'])
