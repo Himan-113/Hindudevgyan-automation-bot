@@ -44,7 +44,7 @@ def generate_gita_wisdom():
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-flash-latest',
             contents=prompt
         )
         text = response.text
