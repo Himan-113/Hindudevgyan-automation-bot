@@ -87,6 +87,7 @@ def fix_missing_images():
     print(f"Found {len(broken_posts)} posts missing featured images.")
     
     for post in broken_posts:
+        time.sleep(10) # FORCE a 10-second delay before every single post, no matter what!
         post_id = post['id']
         headline = post['title']['rendered']
         print(f"\nFixing Post #{post_id}: {headline}")
@@ -119,7 +120,7 @@ def fix_missing_images():
         if os.path.exists(image_path):
             os.remove(image_path)
             
-        time.sleep(6) # Be gentle on APIs and stay under 15 RPM free tier limit
+        print(f"  -> Finished processing Post #{post_id}.")
         
     print("\nCleanup Complete! All missing images have been fixed.")
 
