@@ -155,7 +155,8 @@ def generate_ai_image(prompt, filename="featured_image.jpg"):
     url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true"
     
     try:
-        response = requests.get(url, stream=True)
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(url, stream=True, headers=headers)
         if response.status_code == 200:
             with open(filename, 'wb') as f:
                 for chunk in response.iter_content(1024):

@@ -71,7 +71,8 @@ def generate_ai_image(prompt, filename="gita_image.jpg"):
     url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true"
     
     try:
-        response = requests.get(url, stream=True)
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(url, stream=True, headers=headers)
         if response.status_code == 200:
             with open(filename, 'wb') as f:
                 for chunk in response.iter_content(1024):
@@ -139,7 +140,7 @@ def publish_wp_post(data, media_id, category_id):
         "content": full_content,
         "status": "publish",
         "slug": data['slug'],
-        "categories": [category_id]
+        "categories": [category_id] if category_id else []
     }
     if media_id:
         payload["featured_media"] = media_id
