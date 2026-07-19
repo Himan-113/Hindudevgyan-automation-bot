@@ -119,7 +119,7 @@ def fix_missing_images():
         if os.path.exists(image_path):
             os.remove(image_path)
             
-        time.sleep(2) # Be gentle on APIs
+        time.sleep(6) # Be gentle on APIs and stay under 15 RPM free tier limit
         
     print("\nCleanup Complete! All missing images have been fixed.")
 
