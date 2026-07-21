@@ -35,7 +35,8 @@ def generate_gita_wisdom():
        - Mentions of "Panchang" or "Muhurat" -> <a href="https://hindudevgyan.in/category/panchang/">
        - Mentions of "Bhagavad Gita" or "Karma" -> <a href="https://hindudevgyan.in/category/gita-wisdom/">
        - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
-    7. Generate a highly descriptive English prompt for an AI Image Generator (e.g. "Cinematic realistic painting of Arjuna looking at Krishna, divine golden light, beautiful details, 4k"). Do NOT include any text in the image prompt.
+    7. BILINGUAL WHATSAPP OPTIMIZATION: At the very top of `content_html`, before the English text, you MUST write a 2-3 sentence highly engaging Hindi summary titled '<h3>हिंदी सारांश:</h3>'. This will be pulled by WhatsApp for sharing previews.
+    8. Generate a highly descriptive English prompt for an AI Image Generator (e.g. "Cinematic realistic painting of Arjuna looking at Krishna, divine golden light, beautiful details, 4k"). Do NOT include any text in the image prompt.
     
     Format EXACTLY as valid JSON, with no markdown formatting around it, just raw JSON:
     {
@@ -43,7 +44,7 @@ def generate_gita_wisdom():
         "slug": "your-english-slug-here",
         "sanskrit": "Sanskrit text here",
         "translation": "English translation here",
-        "content_html": "<h2>Meaning</h2><p>...</p>",
+        "content_html": "<h3>हिंदी सारांश:</h3><p>Your Hindi summary here...</p><h2>Meaning</h2><p>Your English text...</p>",
         "image_prompt": "Your image prompt here"
     }
     """
