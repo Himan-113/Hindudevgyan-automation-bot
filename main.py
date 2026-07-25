@@ -7,6 +7,7 @@ from urllib.parse import urlparse, parse_qs
 from google import genai
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from PIL import Image
 import time
 
 load_dotenv()
@@ -18,7 +19,6 @@ WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-# Multiple Elite Hindu Religion Feeds
 RSS_FEEDS = [
     "https://www.abplive.com/lifestyle/religion/feed",
     "https://www.jagran.com/rss/spiritual",
@@ -32,7 +32,7 @@ def fetch_raw_headlines():
     for feed_url in RSS_FEEDS:
         try:
             feed = feedparser.parse(feed_url)
-            for entry in feed.entries[:10]:  # Top 10 from each
+            for entry in feed.entries[:10]:
                 all_news.append({
                     "title": entry.title,
                     "link": entry.link,
@@ -44,9 +44,6 @@ def fetch_raw_headlines():
 
 
 def is_duplicate(url):
-    """URL-level dedup: have we processed this exact source link before?
-    posted_links.txt is restored/saved by the GitHub Actions cache step
-    (see the workflow file) so it survives between scheduled runs."""
     file_path = "posted_links.txt"
     if not os.path.exists(file_path):
         return False
@@ -62,15 +59,7 @@ def mark_as_posted(url):
 
 
 def topic_already_covered_on_site(headline):
-    """
-    Topic-level dedup: evergreen mythology/temple stories often get re-reported
-    by news outlets under a brand-new URL. is_duplicate() alone won't catch
-    that because the URL is different. This checks WordPress itself for a
-    post that already covers the same subject, using the most distinctive
-    words in the proposed headline.
-    """
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-    # Use the longer, more distinctive words in the headline (skip short common words)
     stopwords = {"the", "a", "an", "of", "in", "on", "and", "to", "for", "is", "why", "how"}
     significant_words = [w for w in headline.split() if len(w) > 3 and w.lower() not in stopwords]
     query = " ".join(significant_words[:5])
@@ -155,12 +144,18 @@ def rewrite_article_and_image_prompt(original_title):
     6. BILINGUAL WHATSAPP OPTIMIZATION: At the very top of your HTML Content, before the English text, you MUST write a 2-3 sentence highly engaging Hindi summary titled '<h3>हिंदी सारांश:</h3>'. This will be pulled by WhatsApp for sharing previews.
     7. Category: Determine the ONE best category from this exact list: Mythology, Vedic Wisdom, Daily Sadhana, Festivals & Vrat, Astrology & Horoscope, Temples & Pilgrimage, Mantras & Chants, Spiritual News.
     8. AI Image Prompt: Write a short, highly-descriptive English prompt for an AI Image Generator to create a featured image for this article (e.g. "Cinematic realistic image of Lord Shiva meditating in the Himalayas, golden hour lighting"). Do NOT use text in the image.
+    9. Image Alt Text: Also write a short, literal English description of that same image, for accessibility and image SEO (different from the creative prompt).
+    10. SEO Meta: Provide "meta_title" (under 60 characters, keyword-front-loaded, can differ slightly from the headline), "meta_description" (a click-worthy summary under 155 characters), and "focus_keyword" (the single 2-4 word phrase this article should rank for).
 
     Format the output EXACTLY like this:
     Headline: [Your 100% Unique English Headline]
     Slug: [your-english-url-slug]
     Category: [Just the category name, e.g. Temples & Pilgrimage]
     ImagePrompt: [The English image generation prompt]
+    ImageAltText: [Short literal description of the image]
+    MetaTitle: [SEO title under 60 characters]
+    MetaDescription: [SEO description under 155 characters]
+    FocusKeyword: [2-4 word focus phrase]
     Content:
     <h3>हिंदी सारांश:</h3><p>Your Hindi summary...</p><h2>Your First Heading</h2>
     [Your HTML formatted content in English with <h2>, <p>, <ul>, <li>, <strong>, and <a> tags. Do not include <html> or <body> tags]
@@ -176,13 +171,27 @@ def rewrite_article_and_image_prompt(original_title):
         headline = text.split("Headline:")[1].split("Slug:")[0].strip()
         slug = text.split("Slug:")[1].split("Category:")[0].strip()
         category = text.split("Category:")[1].split("ImagePrompt:")[0].strip()
-        image_prompt = text.split("ImagePrompt:")[1].split("Content:")[0].strip()
+        image_prompt = text.split("ImagePrompt:")[1].split("ImageAltText:")[0].strip()
+        image_alt_text = text.split("ImageAltText:")[1].split("MetaTitle:")[0].strip()
+        meta_title = text.split("MetaTitle:")[1].split("MetaDescription:")[0].strip()
+        meta_description = text.split("MetaDescription:")[1].split("FocusKeyword:")[0].strip()
+        focus_keyword = text.split("FocusKeyword:")[1].split("Content:")[0].strip()
         content = text.split("Content:")[1].strip()
 
         if content.startswith("```html"):
             content = content[7:-3].strip()
 
-        return {"headline": headline, "slug": slug, "category": category, "image_prompt": image_prompt, "content": content}
+        return {
+            "headline": headline,
+            "slug": slug,
+            "category": category,
+            "image_prompt": image_prompt,
+            "image_alt_text": image_alt_text,
+            "meta_title": meta_title,
+            "meta_description": meta_description,
+            "focus_keyword": focus_keyword,
+            "content": content
+        }
     except Exception as e:
         print(f"Failed to generate AI response: {e}")
         return None
@@ -210,6 +219,16 @@ def generate_ai_image(prompt, filename="featured_image.jpg"):
         return None
 
 
+def compress_image(filepath, quality=75):
+    try:
+        img = Image.open(filepath)
+        img.convert("RGB").save(filepath, "JPEG", quality=quality, optimize=True)
+        print(f"Compressed image at quality={quality}")
+    except Exception as e:
+        print(f"Could not compress image (continuing with original): {e}")
+    return filepath
+
+
 def get_or_create_category(category_name):
     categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
@@ -228,7 +247,7 @@ def get_or_create_category(category_name):
     return None
 
 
-def upload_image_to_wp(image_path):
+def upload_image_to_wp(image_path, alt_text=""):
     print("Uploading AI image to WordPress Media Library...")
     media_url = f"{WP_URL}/wp-json/wp/v2/media"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
@@ -240,29 +259,44 @@ def upload_image_to_wp(image_path):
         }
         response = requests.post(media_url, headers=headers, data=file, auth=auth)
 
-        if response.status_code == 201:
-            return response.json()['id']
-        else:
-            print(f"Failed to upload image. Status code: {response.status_code}")
-            return None
+    if response.status_code == 201:
+        media_id = response.json()['id']
+        if alt_text:
+            try:
+                requests.post(
+                    f"{WP_URL}/wp-json/wp/v2/media/{media_id}",
+                    json={"alt_text": alt_text, "title": alt_text},
+                    auth=auth
+                )
+            except Exception as e:
+                print(f"Could not set alt text (image still uploaded fine): {e}")
+        return media_id
+    else:
+        print(f"Failed to upload image. Status code: {response.status_code}")
+        return None
 
 
-def publish_wp_post(headline, content, media_id, category_id, slug):
+def publish_wp_post(data, media_id, category_id, slug, meta_title, meta_description, focus_keyword):
     print("Phase 5: Publishing flawless AI post to WordPress...")
     post_url = f"{WP_URL}/wp-json/wp/v2/posts"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
 
-    data = {
-        "title": headline,
-        "content": content,
+    payload = {
+        "title": data['headline'],
+        "content": data['content'],
         "status": "publish",
         "slug": slug,
-        "categories": [category_id] if category_id else []
+        "categories": [category_id] if category_id else [],
+        "meta": {
+            "rank_math_title": (meta_title or data['headline'])[:60],
+            "rank_math_description": (meta_description or '')[:160],
+            "rank_math_focus_keyword": focus_keyword or ''
+        }
     }
     if media_id:
-        data["featured_media"] = media_id
+        payload["featured_media"] = media_id
 
-    response = requests.post(post_url, json=data, auth=auth)
+    response = requests.post(post_url, json=payload, auth=auth)
 
     if response.status_code == 201:
         print("Successfully published!")
@@ -278,17 +312,13 @@ def main():
         print("ERROR: Missing environment variables.")
         return
 
-    # 1. Fetch raw news from multiple feeds
     all_raw_news = fetch_raw_headlines()
-
-    # 2. Filter out already posted links before sending to AI
     fresh_news = [news for news in all_raw_news if not is_duplicate(news['link'])]
 
     if not fresh_news:
         print("No fresh news found across any network.")
         return
 
-    # 3. Editor-in-Chief Deduplication & Curation
     selected_topics = deduplicate_and_select(fresh_news)
 
     if not selected_topics:
@@ -300,40 +330,41 @@ def main():
     for news in selected_topics:
         print(f"\n--- Processing Master Topic: {news['title']} ---")
 
-        # 4. Scholar AI Rewrites and Creates Image Prompt
         rewritten = rewrite_article_and_image_prompt(news['title'])
         if not rewritten:
             continue
 
-        # 4b. NEW: check if this topic (not just this exact URL) is already on the site
         if topic_already_covered_on_site(rewritten['headline']):
-            mark_as_posted(news['link'])  # still mark the source link so we don't re-process it either
+            mark_as_posted(news['link'])
             continue
 
         print(f"Final Headline: {rewritten['headline']}")
         print(f"AI Category: {rewritten['category']}")
-        print(f"AI Image Prompt: {rewritten['image_prompt']}")
+        print(f"Focus Keyword: {rewritten.get('focus_keyword', 'N/A')}")
 
-        # 5. Generate AI Image
         image_path = generate_ai_image(rewritten['image_prompt'])
         media_id = None
         if image_path:
-            media_id = upload_image_to_wp(image_path)
+            compress_image(image_path)
+            media_id = upload_image_to_wp(image_path, alt_text=rewritten.get('image_alt_text', rewritten['headline']))
 
-        # 6. Get Category
         category_id = get_or_create_category(rewritten['category'])
 
-        # 7. Publish
-        publish_wp_post(rewritten['headline'], rewritten['content'], media_id, category_id, rewritten['slug'])
+        publish_wp_post(
+            rewritten,
+            media_id,
+            category_id,
+            rewritten['slug'],
+            rewritten.get('meta_title'),
+            rewritten.get('meta_description'),
+            rewritten.get('focus_keyword')
+        )
 
-        # 8. Mark original link as posted so we don't process it again
         mark_as_posted(news['link'])
 
-        # Cleanup temp image
         if image_path and os.path.exists(image_path):
             os.remove(image_path)
 
-        # Respect rate limits
         time.sleep(5)
 
 
