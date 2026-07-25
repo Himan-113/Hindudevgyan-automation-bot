@@ -4,6 +4,7 @@ import json
 import urllib.parse
 from google import genai
 from dotenv import load_dotenv
+from PIL import Image
 import time
 
 load_dotenv()
@@ -46,6 +47,8 @@ def generate_gita_wisdom(avoid_list=None):
        - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
     7. BILINGUAL WHATSAPP OPTIMIZATION: At the very top of `content_html`, before the English text, you MUST write a 2-3 sentence highly engaging Hindi summary titled '<h3>हिंदी सारांश:</h3>'. This will be pulled by WhatsApp for sharing previews.
     8. Generate a highly descriptive English prompt for an AI Image Generator (e.g. "Cinematic realistic painting of Arjuna looking at Krishna, divine golden light, beautiful details, 4k"). Do NOT include any text in the image prompt.
+    9. Also generate a short, literal ALT TEXT description of that same image in plain English (e.g. "Arjuna and Krishna on a chariot at Kurukshetra with golden light") - this is for accessibility and image SEO, not the same as the creative prompt.
+    10. SEO META: Provide "meta_title" (a compelling, keyword-front-loaded title under 60 characters, can differ slightly from the headline), "meta_description" (a click-worthy summary under 155 characters), and "focus_keyword" (the single 2-4 word phrase this article should rank for, e.g. "Bhagavad Gita chapter 6 verse 5").
 
     Format EXACTLY as valid JSON, with no markdown formatting around it, just raw JSON:
     {{
@@ -54,7 +57,11 @@ def generate_gita_wisdom(avoid_list=None):
         "sanskrit": "Sanskrit text here",
         "translation": "English translation here",
         "content_html": "<h3>हिंदी सारांश:</h3><p>Your Hindi summary here...</p><h2>Meaning</h2><p>Your English text...</p>",
-        "image_prompt": "Your image prompt here"
+        "image_prompt": "Your image prompt here",
+        "image_alt_text": "Short literal description of the image",
+        "meta_title": "SEO title under 60 chars",
+        "meta_description": "SEO description under 155 chars",
+        "focus_keyword": "2-4 word focus phrase"
     }}
     """
 
@@ -77,20 +84,11 @@ def generate_gita_wisdom(avoid_list=None):
 
 
 def get_recent_slokas(limit=30):
-    """
-    Pull the Sanskrit slokas of the most recent Gita Wisdom posts from WordPress
-    so we know what NOT to repeat. This replaces any local tracking file --
-    WordPress itself is the single source of truth, which also works cleanly
-    on GitHub Actions where nothing persists between runs.
-    """
+    """Pull recent Gita Wisdom post content from WordPress so we know what NOT to repeat."""
     print("Checking WordPress for previously used verses...")
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-    url = f"{WP_URL}/wp-json/wp/v2/posts"
-    params = {"search": "श्लोक OR Sloka OR Sanskrit", "per_page": limit, "_fields": "content"}
-
     used = []
     try:
-        # Pull recent posts from the Gita Wisdom category instead (more reliable than search)
         cat_res = requests.get(f"{WP_URL}/wp-json/wp/v2/categories",
                                 params={"search": "Gita Wisdom"}, auth=auth)
         category_id = None
@@ -101,11 +99,10 @@ def get_recent_slokas(limit=30):
         if category_id:
             params["categories"] = category_id
 
-        res = requests.get(url, params=params, auth=auth)
+        res = requests.get(f"{WP_URL}/wp-json/wp/v2/posts", params=params, auth=auth)
         if res.status_code == 200:
             for post in res.json():
                 raw_html = post.get("content", {}).get("rendered", "")
-                # Grab a rough Sanskrit snippet: first 40 characters after any Devanagari block
                 used.append(raw_html[:400])
     except Exception as e:
         print(f"Could not fetch recent posts (continuing without history): {e}")
@@ -145,7 +142,18 @@ def generate_ai_image(prompt, filename="gita_image.jpg"):
         return None
 
 
-def upload_image_to_wp(image_path):
+def compress_image(filepath, quality=75):
+    """Re-saves the image at a lower JPEG quality to reduce file size for faster page loads."""
+    try:
+        img = Image.open(filepath)
+        img.convert("RGB").save(filepath, "JPEG", quality=quality, optimize=True)
+        print(f"Compressed image at quality={quality}")
+    except Exception as e:
+        print(f"Could not compress image (continuing with original): {e}")
+    return filepath
+
+
+def upload_image_to_wp(image_path, alt_text=""):
     print("Uploading image to WordPress...")
     media_url = f"{WP_URL}/wp-json/wp/v2/media"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
@@ -157,11 +165,21 @@ def upload_image_to_wp(image_path):
         }
         response = requests.post(media_url, headers=headers, data=file, auth=auth)
 
-        if response.status_code == 201:
-            return response.json()['id']
-        else:
-            print(f"Failed to upload image. Status code: {response.status_code}")
-            return None
+    if response.status_code == 201:
+        media_id = response.json()['id']
+        if alt_text:
+            try:
+                requests.post(
+                    f"{WP_URL}/wp-json/wp/v2/media/{media_id}",
+                    json={"alt_text": alt_text, "title": alt_text},
+                    auth=auth
+                )
+            except Exception as e:
+                print(f"Could not set alt text (image still uploaded fine): {e}")
+        return media_id
+    else:
+        print(f"Failed to upload image. Status code: {response.status_code}")
+        return None
 
 
 def get_or_create_category(category_name="Gita Wisdom"):
@@ -200,7 +218,12 @@ def publish_wp_post(data, media_id, category_id):
         "content": full_content,
         "status": "publish",
         "slug": data['slug'],
-        "categories": [category_id] if category_id else []
+        "categories": [category_id] if category_id else [],
+        "meta": {
+            "rank_math_title": data.get('meta_title', data['headline'])[:60],
+            "rank_math_description": data.get('meta_description', '')[:160],
+            "rank_math_focus_keyword": data.get('focus_keyword', '')
+        }
     }
     if media_id:
         payload["featured_media"] = media_id
@@ -215,7 +238,7 @@ def publish_wp_post(data, media_id, category_id):
 
 
 def main():
-    print("Starting Gita Wisdom Engine 2.1 (with duplicate protection)...")
+    print("Starting Gita Wisdom Engine 3.0 (dedup + RankMath SEO + image optimization)...")
 
     if not all([GEMINI_API_KEY, WP_URL, WP_USERNAME, WP_APP_PASSWORD]):
         print("ERROR: Missing environment variables.")
@@ -226,14 +249,13 @@ def main():
     wisdom_data = None
     attempted_slokas = []
 
-    # Try up to 4 times to land on a verse that hasn't been used recently
     for attempt in range(4):
         candidate = generate_gita_wisdom(avoid_list=attempted_slokas)
         if not candidate:
             continue
 
         if sloka_already_used(candidate['sanskrit'], recent_blobs):
-            print(f"Attempt {attempt + 1}: verse already covered recently, retrying with a different pick...")
+            print(f"Attempt {attempt + 1}: verse already covered recently, retrying...")
             attempted_slokas.append(candidate['sanskrit'][:60])
             continue
 
@@ -241,15 +263,17 @@ def main():
         break
 
     if not wisdom_data:
-        print("Could not find a fresh, uncovered verse after several attempts. Skipping today's run rather than posting a duplicate.")
+        print("Could not find a fresh, uncovered verse after several attempts. Skipping today's run.")
         return
 
     print(f"Verse Selected! Headline: {wisdom_data['headline']}")
+    print(f"Focus Keyword: {wisdom_data.get('focus_keyword', 'N/A')}")
 
     image_path = generate_ai_image(wisdom_data['image_prompt'])
     media_id = None
     if image_path:
-        media_id = upload_image_to_wp(image_path)
+        compress_image(image_path)
+        media_id = upload_image_to_wp(image_path, alt_text=wisdom_data.get('image_alt_text', wisdom_data['headline']))
 
     category_id = get_or_create_category()
 
