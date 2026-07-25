@@ -1,0 +1,30 @@
+name: Fix Missing Images (manual utility)
+
+# This one is NOT scheduled. It's a cleanup tool you run yourself whenever
+# you notice posts without a featured image. Go to the "Actions" tab on
+# GitHub, click this workflow's name, then click "Run workflow".
+on:
+  workflow_dispatch: {}
+
+jobs:
+  fix-missing-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Fix Missing Images
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: python bots/fix_missing_images.py

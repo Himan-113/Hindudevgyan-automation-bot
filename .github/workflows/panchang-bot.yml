@@ -1,0 +1,32 @@
+name: Panchang Bot
+
+on:
+  schedule:
+    # Runs once a day at 02:00 UTC = 07:30 AM IST
+    - cron: '0 2 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  run-panchang-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Panchang Bot
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+          PROKERALA_CLIENT_ID: ${{ secrets.PROKERALA_CLIENT_ID }}
+          PROKERALA_CLIENT_SECRET: ${{ secrets.PROKERALA_CLIENT_SECRET }}
+        run: python bots/panchang_bot.py

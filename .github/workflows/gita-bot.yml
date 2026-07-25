@@ -1,0 +1,30 @@
+name: Gita Wisdom Bot
+
+on:
+  schedule:
+    # Runs once a day at 03:00 UTC = 08:30 AM IST
+    - cron: '0 3 * * *'
+  workflow_dispatch: {}   # lets you click "Run workflow" manually in the Actions tab to test
+
+jobs:
+  run-gita-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Gita Wisdom Bot
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: python bots/gita_bot.py

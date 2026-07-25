@@ -1,0 +1,42 @@
+name: News Editor Bot
+
+on:
+  schedule:
+    # Runs twice a day: 05:00 UTC (10:30 AM IST) and 12:00 UTC (5:30 PM IST)
+    - cron: '0 5,12 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  run-main-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # This bot keeps a small text file (posted_links.txt) to remember which
+      # news links it has already turned into articles. GitHub Actions starts
+      # from a clean slate every run, so this "cache" step is what lets that
+      # file survive between runs without you doing anything.
+      - name: Restore posted_links.txt cache
+        uses: actions/cache@v4
+        with:
+          path: posted_links.txt
+          key: posted-links-${{ github.run_id }}
+          restore-keys: |
+            posted-links-
+
+      - name: Run News Editor Bot
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          WP_URL: ${{ secrets.WP_URL }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+        run: python bots/main.py
