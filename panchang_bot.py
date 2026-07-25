@@ -4,6 +4,7 @@ import json
 import urllib.parse
 from google import genai
 from dotenv import load_dotenv
+from PIL import Image
 import time
 from datetime import datetime
 import pytz
@@ -15,8 +16,6 @@ WP_URL = os.getenv("WP_URL")
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
-# Prokerala credentials now come from environment variables / GitHub Secrets
-# instead of being hardcoded in this file.
 PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID")
 PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET")
 
@@ -27,12 +26,6 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 # DUPLICATE PROTECTION
 # ==========================================
 def already_published_today():
-    """
-    Checks WordPress for any Panchang/Horoscope-style post published since
-    midnight IST today. If one exists, we skip -- this is what stops the
-    bot from publishing the same day's panchang 3-8 times if it gets
-    triggered more than once (e.g. a scheduler misfire or a manual re-run).
-    """
     print("Checking WordPress for today's panchang post...")
     auth = (WP_USERNAME, WP_APP_PASSWORD)
 
@@ -55,7 +48,6 @@ def already_published_today():
                     return True
     except Exception as e:
         print(f"Could not check WordPress for existing posts (continuing cautiously): {e}")
-        # If we can't verify, it's safer to skip than to risk a duplicate.
         return True
 
     return False
@@ -65,7 +57,6 @@ def already_published_today():
 # E-COMMERCE & UPSELL INJECTION
 # ==========================================
 def get_affiliate_html(category):
-    """Contextual Affiliate Product Injection"""
     if category.lower() == 'shiva':
         return """
         <div style="background:#fff8f0; border:1px solid #FF9800; padding:20px; border-radius:8px; margin-top:30px;">
@@ -111,7 +102,6 @@ def get_affiliate_html(category):
 
 
 def get_ebook_upsell_html():
-    """Digital Product E-Book Mid-Article Injection"""
     return """
     <div style="background:#fffbeb; border:2px dashed #f59e0b; padding:25px; border-radius:8px; margin:30px 0; text-align:center;">
         <h3 style="margin-top:0; color:#b45309; font-size:22px;">Transform Your Home's Energy Today!</h3>
@@ -122,7 +112,6 @@ def get_ebook_upsell_html():
 
 
 def get_kundli_upsell_html():
-    """Astrological Upsell Funnel to Premium PDF"""
     return """
     <div style="background:#FDF0DB; border-left:4px solid #E8540A; padding:20px; border-radius:6px; margin-top:30px; margin-bottom:20px;">
         <h3 style="margin-top:0; color:#E8540A;">Curious how today's Nakshatra affects you?</h3>
@@ -150,7 +139,6 @@ def get_prokerala_panchang():
         token_res.raise_for_status()
         access_token = token_res.json().get('access_token')
 
-        # New Delhi Coordinates
         lat, lon = "28.6139", "77.2090"
         ist_now = datetime.now(pytz.timezone('Asia/Kolkata')).isoformat()
 
@@ -197,6 +185,8 @@ def generate_panchang_article(astro_data):
        - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
     6. BILINGUAL WHATSAPP OPTIMIZATION: At the very top of `content_html`, before the English text, you MUST write a 2-3 sentence highly engaging Hindi summary titled '<h3>हिंदी सारांश:</h3>'. This will be pulled by WhatsApp for sharing previews.
     7. Generate a highly descriptive English prompt for an AI Image Generator representing today's astrological energy (e.g. "Cinematic painting of cosmic planets, mystical glowing aura..."). Do NOT include any text in the image prompt.
+    8. Also generate a short, literal ALT TEXT description of that image in plain English, for accessibility and image SEO.
+    9. SEO META: Provide "meta_title" (under 60 characters, front-loaded with the Nakshatra/Tithi name), "meta_description" (under 155 characters), and "focus_keyword" (2-4 words, e.g. "{nakshatra} {tithi} panchang today").
 
     Format EXACTLY as valid JSON:
     {{
@@ -204,7 +194,11 @@ def generate_panchang_article(astro_data):
         "slug": "your-english-slug-here",
         "ecommerce_category": "general",
         "content_html": "<h3>हिंदी सारांश:</h3><p>Your Hindi summary here...</p><h2>Today's Astrological Significance</h2><p>Your English text...</p>",
-        "image_prompt": "Your image prompt here"
+        "image_prompt": "Your image prompt here",
+        "image_alt_text": "Short literal description of the image",
+        "meta_title": "SEO title under 60 chars",
+        "meta_description": "SEO description under 155 chars",
+        "focus_keyword": "2-4 word focus phrase"
     }}
     """
 
@@ -245,7 +239,17 @@ def generate_ai_image(prompt, filename="panchang_image.jpg"):
         return None
 
 
-def upload_image_to_wp(image_path):
+def compress_image(filepath, quality=75):
+    try:
+        img = Image.open(filepath)
+        img.convert("RGB").save(filepath, "JPEG", quality=quality, optimize=True)
+        print(f"Compressed image at quality={quality}")
+    except Exception as e:
+        print(f"Could not compress image (continuing with original): {e}")
+    return filepath
+
+
+def upload_image_to_wp(image_path, alt_text=""):
     print("Uploading image to WordPress...")
     media_url = f"{WP_URL}/wp-json/wp/v2/media"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
@@ -256,8 +260,19 @@ def upload_image_to_wp(image_path):
             'Content-Type': 'image/jpeg'
         }
         response = requests.post(media_url, headers=headers, data=file, auth=auth)
-        if response.status_code == 201:
-            return response.json()['id']
+
+    if response.status_code == 201:
+        media_id = response.json()['id']
+        if alt_text:
+            try:
+                requests.post(
+                    f"{WP_URL}/wp-json/wp/v2/media/{media_id}",
+                    json={"alt_text": alt_text, "title": alt_text},
+                    auth=auth
+                )
+            except Exception as e:
+                print(f"Could not set alt text (image still uploaded fine): {e}")
+        return media_id
     return None
 
 
@@ -312,7 +327,12 @@ def publish_wp_post(data, astro_data, media_id, category_id):
         "content": full_content,
         "status": "publish",
         "slug": data['slug'],
-        "categories": [category_id] if category_id else []
+        "categories": [category_id] if category_id else [],
+        "meta": {
+            "rank_math_title": data.get('meta_title', data['headline'])[:60],
+            "rank_math_description": data.get('meta_description', '')[:160],
+            "rank_math_focus_keyword": data.get('focus_keyword', '')
+        }
     }
     if media_id:
         payload["featured_media"] = media_id
@@ -344,9 +364,13 @@ def main():
         return
 
     print(f"AI Editor selected headline: {article_data['headline']}")
+    print(f"Focus Keyword: {article_data.get('focus_keyword', 'N/A')}")
 
     image_path = generate_ai_image(article_data['image_prompt'])
-    media_id = upload_image_to_wp(image_path) if image_path else None
+    media_id = None
+    if image_path:
+        compress_image(image_path)
+        media_id = upload_image_to_wp(image_path, alt_text=article_data.get('image_alt_text', article_data['headline']))
 
     category_id = get_or_create_category()
 
