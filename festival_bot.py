@@ -150,7 +150,7 @@ def upload_image_to_wp(image_path):
             return response.json()['id']
     return None
 
-def get_or_create_category(category_name="Festivals & Vrats"):
+def get_or_create_category(category_name="Festivals & Vrat"):
     categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
 
