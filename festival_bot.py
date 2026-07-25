@@ -65,17 +65,17 @@ def get_ebook_upsell_html():
 # ==========================================
 def generate_weekly_festivals():
     print("AI Astrologer is calculating upcoming festivals for the week...")
-    
+
     today = datetime.now()
     next_week = today + timedelta(days=7)
     date_range = f"{today.strftime('%B %d, %Y')} to {next_week.strftime('%B %d, %Y')}"
-    
+
     prompt = f"""
-    You are an enlightened Vedic Astrologer and Historian. 
+    You are an enlightened Vedic Astrologer and Historian.
     Write a 600-word comprehensive guide about the upcoming Hindu Festivals and Vrats (like Ekadashi, Pradosh, or major festivals) for the week of: {date_range}.
-    
+
     If there are no major well-known festivals, focus on the significance of the upcoming Ekadashi or Purnima/Amavasya, or discuss the spiritual significance of the current Hindu month.
-    
+
     CRITICAL REQUIREMENTS:
     1. Write an SEO optimized, highly clickable Headline.
     2. Provide a 5-6 word URL Slug.
@@ -89,7 +89,7 @@ def generate_weekly_festivals():
        - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
     6. BILINGUAL WHATSAPP OPTIMIZATION: At the very top of `content_html`, before the English text, you MUST write a 2-3 sentence highly engaging Hindi summary titled '<h3>हिंदी सारांश:</h3>'. This will be pulled by WhatsApp for sharing previews.
     7. Generate a highly descriptive English prompt for an AI Image Generator representing the festival or spiritual mood (e.g. "Cinematic vibrant painting of Indian temple celebration, glowing lights, festive atmosphere..."). Do NOT include any text in the image prompt.
-    
+
     Format EXACTLY as valid JSON:
     {{
         "headline": "Your English Headline Here",
@@ -99,10 +99,10 @@ def generate_weekly_festivals():
         "image_prompt": "Your image prompt here"
     }}
     """
-    
+
     try:
         response = client.models.generate_content(
-            model='gemini-flash-latest', 
+            model='gemini-flash-latest',
             contents=prompt
         )
         text = response.text
@@ -110,7 +110,7 @@ def generate_weekly_festivals():
             text = text[7:-3].strip()
         elif text.startswith("```"):
             text = text[3:-3].strip()
-            
+
         return json.loads(text)
     except Exception as e:
         print(f"Failed to generate AI article: {e}")
@@ -120,7 +120,7 @@ def generate_ai_image(prompt, filename="festival_image.jpg"):
     print(f"Generating Festival AI Image... ({prompt})")
     encoded_prompt = urllib.parse.quote(prompt)
     url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true"
-    
+
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         response = requests.get(url, stream=True, headers=headers)
@@ -139,7 +139,7 @@ def upload_image_to_wp(image_path):
     print("Uploading image to WordPress...")
     media_url = f"{WP_URL}/wp-json/wp/v2/media"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-    
+
     with open(image_path, 'rb') as file:
         headers = {
             'Content-Disposition': f'attachment; filename="{os.path.basename(image_path)}"',
@@ -153,13 +153,13 @@ def upload_image_to_wp(image_path):
 def get_or_create_category(category_name="Festivals & Vrats"):
     categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-    
+
     response = requests.get(categories_url, params={"search": category_name}, auth=auth)
     if response.status_code == 200:
         for cat in response.json():
             if cat['name'].lower() == category_name.lower():
                 return cat['id']
-                
+
     response = requests.post(categories_url, json={"name": category_name}, auth=auth)
     if response.status_code == 201:
         return response.json()['id']
@@ -169,24 +169,20 @@ def publish_wp_post(data, media_id, category_id):
     print("Publishing Weekly Festival Guide to WordPress...")
     post_url = f"{WP_URL}/wp-json/wp/v2/posts"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-    
-    # 1. The Core AI Content
-    # Inject E-Book CTA directly into the middle of the AI article
+
     paragraphs = data['content_html'].split('</p>')
     if len(paragraphs) > 2:
         mid_idx = len(paragraphs) // 2
         paragraphs.insert(mid_idx, get_ebook_upsell_html())
     full_content = '</p>'.join(paragraphs)
-    
-    # 2. Inject The Contextual E-Commerce Block
+
     full_content += get_affiliate_html(data['ecommerce_category'])
-    
-    # 3. Inject The EEAT Disclaimer
+
     full_content += """
     <hr style="margin-top:30px;">
     <p style="font-size:12px; color:#888;"><em><strong>Disclaimer:</strong> Festival dates and timings can vary by geographical location and specific local panchang. Please consult with your local temple or pandit for exact fasting Muhurats in your timezone.</em></p>
     """
-    
+
     payload = {
         "title": data['headline'],
         "content": full_content,
@@ -196,7 +192,7 @@ def publish_wp_post(data, media_id, category_id):
     }
     if media_id:
         payload["featured_media"] = media_id
-        
+
     response = requests.post(post_url, json=payload, auth=auth)
     if response.status_code == 201:
         print(f"Successfully published: {data['headline']}!")
@@ -205,25 +201,25 @@ def publish_wp_post(data, media_id, category_id):
 
 def main():
     print("Starting Weekly Festival & Commerce Bot...")
-    
+
     # Only run on Sundays (0 = Monday, 6 = Sunday)
     if datetime.now().weekday() != 6:
         print("Today is not Sunday. The Weekly Festival Bot will sleep.")
         return
-        
+
     article_data = generate_weekly_festivals()
     if not article_data:
         return
-        
+
     print(f"AI Editor selected headline: {article_data['headline']}")
-    
+
     image_path = generate_ai_image(article_data['image_prompt'])
     media_id = upload_image_to_wp(image_path) if image_path else None
-        
+
     category_id = get_or_create_category()
-    
+
     publish_wp_post(article_data, media_id, category_id)
-    
+
     if image_path and os.path.exists(image_path):
         os.remove(image_path)
 

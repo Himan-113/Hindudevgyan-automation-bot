@@ -15,11 +15,51 @@ WP_URL = os.getenv("WP_URL")
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
-# Prokerala Credentials (from your PHP snippet)
-PROKERALA_CLIENT_ID = 'ee4667d9-435d-448c-b846-cf266945e020'
-PROKERALA_CLIENT_SECRET = 'll7jobOolDnuqMkQsDaqPfBCuQ1BThHD1xlHUZIM'
+# Prokerala credentials now come from environment variables / GitHub Secrets
+# instead of being hardcoded in this file.
+PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID")
+PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET")
 
 client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+# ==========================================
+# DUPLICATE PROTECTION
+# ==========================================
+def already_published_today():
+    """
+    Checks WordPress for any Panchang/Horoscope-style post published since
+    midnight IST today. If one exists, we skip -- this is what stops the
+    bot from publishing the same day's panchang 3-8 times if it gets
+    triggered more than once (e.g. a scheduler misfire or a manual re-run).
+    """
+    print("Checking WordPress for today's panchang post...")
+    auth = (WP_USERNAME, WP_APP_PASSWORD)
+
+    ist = pytz.timezone('Asia/Kolkata')
+    now_ist = datetime.now(ist)
+    start_of_day_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+    start_of_day_utc_iso = start_of_day_ist.astimezone(pytz.utc).isoformat()
+
+    url = f"{WP_URL}/wp-json/wp/v2/posts"
+    params = {"after": start_of_day_utc_iso, "per_page": 30, "_fields": "title"}
+
+    try:
+        res = requests.get(url, params=params, auth=auth)
+        if res.status_code == 200:
+            keywords = ["panchang", "horoscope", "nakshatra", "tithi"]
+            for post in res.json():
+                title = post.get("title", {}).get("rendered", "").lower()
+                if any(k in title for k in keywords):
+                    print(f"Found existing post today: {post.get('title', {}).get('rendered')}")
+                    return True
+    except Exception as e:
+        print(f"Could not check WordPress for existing posts (continuing cautiously): {e}")
+        # If we can't verify, it's safer to skip than to risk a duplicate.
+        return True
+
+    return False
+
 
 # ==========================================
 # E-COMMERCE & UPSELL INJECTION
@@ -69,6 +109,7 @@ def get_affiliate_html(category):
         </div>
         """
 
+
 def get_ebook_upsell_html():
     """Digital Product E-Book Mid-Article Injection"""
     return """
@@ -78,6 +119,7 @@ def get_ebook_upsell_html():
         <a href="https://rzp.io/rzp/VtX5q0e" target="_blank" style="display:inline-block; background:#f59e0b; color:#fff; padding:15px 30px; border-radius:30px; font-weight:bold; text-decoration:none; font-size:18px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">Unlock The Vastu Shastra Mastery Guide (₹99)</a>
     </div>
     """
+
 
 def get_kundli_upsell_html():
     """Astrological Upsell Funnel to Premium PDF"""
@@ -90,6 +132,7 @@ def get_kundli_upsell_html():
     </div>
     """
 
+
 # ==========================================
 # CORE BOT LOGIC
 # ==========================================
@@ -101,19 +144,19 @@ def get_prokerala_panchang():
         'client_id': PROKERALA_CLIENT_ID,
         'client_secret': PROKERALA_CLIENT_SECRET
     }
-    
+
     try:
         token_res = requests.post(token_url, data=token_payload)
         token_res.raise_for_status()
         access_token = token_res.json().get('access_token')
-        
+
         # New Delhi Coordinates
         lat, lon = "28.6139", "77.2090"
         ist_now = datetime.now(pytz.timezone('Asia/Kolkata')).isoformat()
-        
+
         panchang_url = f"https://api.prokerala.com/v2/astrology/panchang?datetime={urllib.parse.quote(ist_now)}&coordinates={lat},{lon}&ayanamsa=1"
         headers = {'Authorization': f'Bearer {access_token}'}
-        
+
         print("Fetching Exact Daily Panchang...")
         astro_res = requests.get(panchang_url, headers=headers)
         astro_res.raise_for_status()
@@ -122,24 +165,25 @@ def get_prokerala_panchang():
         print(f"Failed to fetch Prokerala data: {e}")
         return None
 
+
 def generate_panchang_article(astro_data):
     print("Passing precise astronomical data to AI Editor...")
-    
+
     nakshatra = astro_data['data']['nakshatra'][0]['name']
     tithi = astro_data['data']['tithi'][0]['name']
     karana = astro_data['data']['karana'][0]['name']
     yoga = astro_data['data']['yoga'][0]['name']
-    
+
     prompt = f"""
-    You are an enlightened Vedic Astrologer. 
+    You are an enlightened Vedic Astrologer.
     Write a 500-word daily horoscope/panchang article for today.
-    
+
     Here is the exact mathematical astrological data for today:
     - Nakshatra: {nakshatra}
     - Tithi: {tithi}
     - Karana: {karana}
     - Yoga: {yoga}
-    
+
     CRITICAL REQUIREMENTS:
     1. Write a beautiful, inspiring daily guidance article based on this specific Nakshatra and Tithi.
     2. Provide an SEO optimized, highly clickable Headline.
@@ -153,7 +197,7 @@ def generate_panchang_article(astro_data):
        - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
     6. BILINGUAL WHATSAPP OPTIMIZATION: At the very top of `content_html`, before the English text, you MUST write a 2-3 sentence highly engaging Hindi summary titled '<h3>हिंदी सारांश:</h3>'. This will be pulled by WhatsApp for sharing previews.
     7. Generate a highly descriptive English prompt for an AI Image Generator representing today's astrological energy (e.g. "Cinematic painting of cosmic planets, mystical glowing aura..."). Do NOT include any text in the image prompt.
-    
+
     Format EXACTLY as valid JSON:
     {{
         "headline": "Your English Headline Here",
@@ -163,12 +207,10 @@ def generate_panchang_article(astro_data):
         "image_prompt": "Your image prompt here"
     }}
     """
-    
+
     try:
-        # NOTE: Keeping gemini-flash-latest because gemini-2.0-flash failed with quota 0 in tests earlier.
-        # Ensure you use your newly generated API key!
         response = client.models.generate_content(
-            model='gemini-flash-latest', 
+            model='gemini-flash-latest',
             contents=prompt
         )
         text = response.text
@@ -176,17 +218,18 @@ def generate_panchang_article(astro_data):
             text = text[7:-3].strip()
         elif text.startswith("```"):
             text = text[3:-3].strip()
-            
+
         return json.loads(text)
     except Exception as e:
         print(f"Failed to generate AI article: {e}")
         return None
 
+
 def generate_ai_image(prompt, filename="panchang_image.jpg"):
     print(f"Generating Astrological AI Image... ({prompt})")
     encoded_prompt = urllib.parse.quote(prompt)
     url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true"
-    
+
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         response = requests.get(url, stream=True, headers=headers)
@@ -198,14 +241,15 @@ def generate_ai_image(prompt, filename="panchang_image.jpg"):
             return filename
         else:
             return None
-    except:
+    except Exception:
         return None
+
 
 def upload_image_to_wp(image_path):
     print("Uploading image to WordPress...")
     media_url = f"{WP_URL}/wp-json/wp/v2/media"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-    
+
     with open(image_path, 'rb') as file:
         headers = {
             'Content-Disposition': f'attachment; filename="{os.path.basename(image_path)}"',
@@ -216,30 +260,31 @@ def upload_image_to_wp(image_path):
             return response.json()['id']
     return None
 
+
 def get_or_create_category(category_name="Daily Panchang"):
     categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-    
+
     response = requests.get(categories_url, params={"search": category_name}, auth=auth)
     if response.status_code == 200:
         for cat in response.json():
             if cat['name'].lower() == category_name.lower():
                 return cat['id']
-                
+
     response = requests.post(categories_url, json={"name": category_name}, auth=auth)
     if response.status_code == 201:
         return response.json()['id']
     return None
 
+
 def publish_wp_post(data, astro_data, media_id, category_id):
     print("Publishing to WordPress with E-Commerce & Kundli Upsells...")
     post_url = f"{WP_URL}/wp-json/wp/v2/posts"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-    
+
     nakshatra = astro_data['data']['nakshatra'][0]['name']
     tithi = astro_data['data']['tithi'][0]['name']
-    
-    # 1. The Core AI Content
+
     full_content = f"""
     <div style="background:#f8f9fa; border-left:5px solid #2563eb; padding:25px; margin-bottom:30px;">
         <h3 style="color:#1d4ed8; margin-top:0;">Exact Planetary Positions Today</h3>
@@ -247,28 +292,21 @@ def publish_wp_post(data, astro_data, media_id, category_id):
         <p><strong>Nakshatra:</strong> {nakshatra}</p>
     </div>
     """
-    
-    # Inject E-Book CTA directly into the middle of the AI article
+
     paragraphs = data['content_html'].split('</p>')
     if len(paragraphs) > 2:
         mid_idx = len(paragraphs) // 2
         paragraphs.insert(mid_idx, get_ebook_upsell_html())
     mid_injected_html = '</p>'.join(paragraphs)
-    
+
     full_content += mid_injected_html
-    
-    # 2. Inject The E-Commerce Block
     full_content += get_affiliate_html(data['ecommerce_category'])
-    
-    # 3. Inject The Kundli Upsell Funnel
     full_content += get_kundli_upsell_html()
-    
-    # 4. Inject The EEAT Disclaimer
     full_content += """
     <hr style="margin-top:30px;">
     <p style="font-size:12px; color:#888;"><em><strong>Disclaimer:</strong> This daily astrological forecast is algorithmically generated based on precise astronomical calculations and traditional Vedic Astrology principles. It is for spiritual guidance and entertainment purposes only.</em></p>
     """
-    
+
     payload = {
         "title": data['headline'],
         "content": full_content,
@@ -278,35 +316,45 @@ def publish_wp_post(data, astro_data, media_id, category_id):
     }
     if media_id:
         payload["featured_media"] = media_id
-        
+
     response = requests.post(post_url, json=payload, auth=auth)
     if response.status_code == 201:
         print(f"Successfully published: {data['headline']}!")
     else:
         print(f"Failed to publish. Status code: {response.status_code}")
 
+
 def main():
     print("Starting Daily Panchang & Monetization Bot...")
-    
+
+    if not all([GEMINI_API_KEY, WP_URL, WP_USERNAME, WP_APP_PASSWORD, PROKERALA_CLIENT_ID, PROKERALA_CLIENT_SECRET]):
+        print("ERROR: Missing environment variables.")
+        return
+
+    if already_published_today():
+        print("A panchang/horoscope post already exists for today. Skipping to avoid a duplicate.")
+        return
+
     astro_data = get_prokerala_panchang()
     if not astro_data:
         return
-        
+
     article_data = generate_panchang_article(astro_data)
     if not article_data:
         return
-        
+
     print(f"AI Editor selected headline: {article_data['headline']}")
-    
+
     image_path = generate_ai_image(article_data['image_prompt'])
     media_id = upload_image_to_wp(image_path) if image_path else None
-        
+
     category_id = get_or_create_category()
-    
+
     publish_wp_post(article_data, astro_data, media_id, category_id)
-    
+
     if image_path and os.path.exists(image_path):
         os.remove(image_path)
+
 
 if __name__ == "__main__":
     main()
