@@ -29,4 +29,4 @@ jobs:
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
           PROKERALA_CLIENT_ID: ${{ secrets.PROKERALA_CLIENT_ID }}
           PROKERALA_CLIENT_SECRET: ${{ secrets.PROKERALA_CLIENT_SECRET }}
-        run: python bots/panchang_bot.py
+        run: python panchang_bot.py
