@@ -3,6 +3,7 @@ import requests
 import json
 import urllib.parse
 from google import genai
+from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 import time
 from datetime import datetime, timedelta
