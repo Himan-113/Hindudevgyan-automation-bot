@@ -2,8 +2,8 @@ name: Mantra Pool Growth Bot
 
 on:
   schedule:
-    # Runs Monday, Wednesday, Friday at 06:00 UTC = 11:30 AM IST
-    - cron: '0 6 * * 1,3,5'
+    # Runs Monday, Wednesday, Friday at 01:00 UTC = 06:30 AM IST (Early morning for WhatsApp sharing)
+    - cron: '0 1 * * 1,3,5'
   workflow_dispatch: {}
 
 jobs:

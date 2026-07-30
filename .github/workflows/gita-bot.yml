@@ -2,8 +2,8 @@ name: Gita Wisdom Bot
 
 on:
   schedule:
-    # Runs once a day at 03:00 UTC = 08:30 AM IST
-    - cron: '0 3 * * *'
+    # Runs once a day at 00:45 UTC = 06:15 AM IST (Early morning for WhatsApp sharing)
+    - cron: '45 0 * * *'
   workflow_dispatch: {}   # lets you click "Run workflow" manually in the Actions tab to test
 
 jobs:

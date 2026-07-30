@@ -2,8 +2,8 @@ name: Panchang Bot
 
 on:
   schedule:
-    # Runs once a day at 02:00 UTC = 07:30 AM IST
-    - cron: '0 2 * * *'
+    # Runs once a day at 00:30 UTC = 06:00 AM IST (Early morning for WhatsApp sharing)
+    - cron: '30 0 * * *'
   workflow_dispatch: {}
 
 jobs:
