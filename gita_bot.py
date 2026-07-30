@@ -208,53 +208,64 @@ def generate_ai_image(prompt, filename="gita_image.jpg"):
 
 def compress_image(filepath, quality=82):
     """
-    Applies UnsharpMask filter for crispness, adds a semi-transparent 'HinduDevGyan'
-    watermark badge in the top-right corner to protect image rights on Google Images,
+    Overlays the actual HinduDevGyan logo (logo.png) in the top-right corner,
+    applies UnsharpMask sharpening filter for HD crispness,
     and compresses with web-optimized JPEG settings.
     """
     try:
         img = Image.open(filepath).convert("RGBA")
         width, height = img.size
 
-        # Create transparent overlay for watermark badge
-        overlay = Image.new("RGBA", (width, height), (255, 255, 255, 0))
-        draw = ImageDraw.Draw(overlay)
+        logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
+        if os.path.exists(logo_path):
+            logo = Image.open(logo_path).convert("RGBA")
 
-        text = "🚩 HinduDevGyan"
-        margin = 20
-        badge_width = 180
-        badge_height = 36
-        x1 = width - margin - badge_width
-        y1 = margin
-        x2 = width - margin
-        y2 = margin + badge_height
+            # Convert near-white background pixels to transparent
+            datas = logo.getdata()
+            new_data = []
+            for item in datas:
+                if item[0] > 230 and item[1] > 230 and item[2] > 230:
+                    new_data.append((255, 255, 255, 0))
+                else:
+                    new_data.append(item)
+            logo.putdata(new_data)
 
-        # Semi-transparent dark pill with saffron border
-        draw.rounded_rectangle([x1, y1, x2, y2], radius=8, fill=(15, 23, 42, 175), outline=(232, 84, 10, 220), width=1)
+            # Resize logo to width = 210px (maintaining aspect ratio)
+            target_w = 210
+            w_percent = (target_w / float(logo.size[0]))
+            target_h = int((float(logo.size[1]) * float(w_percent)))
+            logo = logo.resize((target_w, target_h), Image.Resampling.LANCZOS)
 
-        # Draw text centered in badge
-        try:
-            font = ImageFont.truetype("arial.ttf", 16)
-        except Exception:
-            font = ImageFont.load_default()
+            # White semi-transparent rounded backing card for high visibility
+            margin = 18
+            padding = 8
+            card_w = target_w + (padding * 2)
+            card_h = target_h + (padding * 2)
 
-        bbox = draw.textbbox((0, 0), text, font=font)
-        tw = bbox[2] - bbox[0]
-        th = bbox[3] - bbox[1]
-        tx = x1 + (badge_width - tw) / 2
-        ty = y1 + (badge_height - th) / 2 - 1
+            card_x1 = width - margin - card_w
+            card_y1 = margin
+            card_x2 = width - margin
+            card_y2 = margin + card_h
 
-        draw.text((tx, ty), text, fill=(255, 255, 255, 240), font=font)
+            overlay = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+            draw = ImageDraw.Draw(overlay)
+            draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=8, fill=(255, 255, 255, 225), outline=(232, 84, 10, 240), width=2)
 
-        # Composite overlay
-        combined = Image.alpha_composite(img, overlay).convert("RGB")
+            # Composite card onto image
+            img = Image.alpha_composite(img, overlay)
+
+            # Paste logo inside card
+            logo_x = card_x1 + padding
+            logo_y = card_y1 + padding
+            img.paste(logo, (logo_x, logo_y), logo)
 
         # Apply UnsharpMask sharpening filter
+        combined = img.convert("RGB")
         sharpened = combined.filter(ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=3))
 
         # Save with web-optimized JPEG compression
         sharpened.save(filepath, "JPEG", quality=quality, optimize=True, progressive=True)
-        print(f"Compressed & Watermarked image (Sharpness enhanced, Quality={quality})")
+        print(f"Compressed & Logo Watermarked image (Sharpness enhanced, Quality={quality})")
     except Exception as e:
         print(f"Could not process image (continuing with original): {e}")
     return filepath
