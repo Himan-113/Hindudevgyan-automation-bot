@@ -328,8 +328,11 @@ def publish_wp_post(data, astro_data, media_id, category_id):
     full_content += get_affiliate_html(data['ecommerce_category'])
     full_content += """<hr style="margin-top:30px;"><p style="font-size:12px; color:#888;"><em><strong>Disclaimer:</strong> This daily astrological forecast is algorithmically generated based on precise astronomical calculations. It is for spiritual guidance and entertainment purposes only.</em></p>"""
 
+    ist_now = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%dT%H:%M:%S')
+
     payload = {
         "title": data['headline'], "content": full_content, "status": "publish",
+        "date": ist_now,
         "slug": data['slug'], "categories": [category_id] if category_id else [],
         "meta": {
             "rank_math_title": data.get('meta_title', data['headline'])[:60],

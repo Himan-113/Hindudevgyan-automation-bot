@@ -6,6 +6,8 @@ from google import genai
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 import time
+from datetime import datetime
+import pytz
 
 load_dotenv()
 
@@ -348,10 +350,13 @@ def publish_wp_post(data, media_id, category_id):
     full_content += get_kundli_upsell_html()
     full_content += get_affiliate_html()
 
+    ist_now = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%dT%H:%M:%S')
+
     payload = {
         "title": data['headline'],
         "content": full_content,
         "status": "publish",
+        "date": ist_now,
         "slug": data['slug'],
         "categories": [category_id] if category_id else [],
         "meta": {

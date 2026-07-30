@@ -4,8 +4,10 @@ import json
 import re
 import urllib.parse
 from google import genai
-from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
+import time
+from datetime import datetime
+import pytz
 
 load_dotenv()
 
@@ -371,10 +373,13 @@ def publish_mantra_post(mantra_data, category_id, media_id=None, target_day=1):
     {get_affiliate_html(target_day)}
     """
 
+    ist_now = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%dT%H:%M:%S')
+
     payload = {
         "title": mantra_data['title_en'],
         "content": content,
         "status": "publish",
+        "date": ist_now,
         "slug": mantra_data.get('slug', ''),
         "categories": [category_id] if category_id else [],
         "meta": {

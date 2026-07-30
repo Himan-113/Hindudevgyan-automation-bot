@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 import time
 from datetime import datetime, timedelta
+import pytz
 
 load_dotenv()
 
@@ -92,7 +93,8 @@ def get_kundli_upsell_html():
 def generate_weekly_festivals():
     print("AI Astrologer is calculating upcoming festivals for the week...")
 
-    today = datetime.now()
+    ist = pytz.timezone('Asia/Kolkata')
+    today = datetime.now(ist)
     next_week = today + timedelta(days=7)
     date_range = f"{today.strftime('%B %d, %Y')} to {next_week.strftime('%B %d, %Y')}"
 
@@ -250,8 +252,11 @@ def publish_wp_post(data, media_id, category_id):
     full_content += get_affiliate_html(data['ecommerce_category'])
     full_content += """<hr style="margin-top:30px;"><p style="font-size:12px; color:#888;"><em><strong>Disclaimer:</strong> Festival dates and timings can vary by geographical location. Please consult your local temple or pandit for exact Muhurats.</em></p>"""
 
+    ist_now = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%dT%H:%M:%S')
+
     payload = {
         "title": data['headline'], "content": full_content, "status": "publish",
+        "date": ist_now,
         "slug": data['slug'], "categories": [category_id] if category_id else []
     }
     if media_id:
