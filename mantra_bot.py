@@ -2,8 +2,10 @@ import os
 import requests
 import json
 import re
+import urllib.parse
 from google import genai
 from dotenv import load_dotenv
+from PIL import Image
 
 load_dotenv()
 
@@ -78,6 +80,12 @@ def generate_new_mantra(target_day, existing_sanskrit_openers):
        "meta_description" (under 155 characters), "focus_keyword" (2-4 words,
        e.g. "Shani mantra meaning").
     8. URL Slug: a 3-5 word English slug for this mantra, hyphenated (e.g. "shani-mantra-meaning-benefits").
+    9. AI Image Prompt: Write a highly descriptive, cinematic English prompt for an AI Image
+       Generator to create a featured image representing this mantra's deity/theme
+       (e.g. "Cinematic realistic image of Lord Shiva meditating in the Himalayas, golden
+       hour lighting, 8k, highly detailed"). Do NOT include any text in the image.
+    10. Image Alt Text: A short, literal English description of that same image, for
+        accessibility and image SEO (different from the creative prompt).
 
     Format EXACTLY as valid JSON, no markdown, no extra text:
     {{
@@ -90,7 +98,9 @@ def generate_new_mantra(target_day, existing_sanskrit_openers):
         "meta_title": "SEO title under 60 chars",
         "meta_description": "SEO description under 155 chars",
         "focus_keyword": "2-4 word focus phrase",
-        "slug": "3-5-word-url-slug"
+        "slug": "3-5-word-url-slug",
+        "image_prompt": "Your image generation prompt here",
+        "image_alt_text": "Short literal description of the image"
     }}
     """
 
@@ -110,6 +120,68 @@ def generate_new_mantra(target_day, existing_sanskrit_openers):
         return None
 
 
+def generate_ai_image(prompt, filename="mantra_image.jpg"):
+    print(f"Generating Copyright-Free AI Image... ({prompt})")
+    encoded_prompt = urllib.parse.quote(prompt)
+    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true"
+
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        response = requests.get(url, stream=True, headers=headers)
+        if response.status_code == 200:
+            with open(filename, 'wb') as f:
+                for chunk in response.iter_content(1024):
+                    f.write(chunk)
+            print("Successfully generated AI image!")
+            return filename
+        else:
+            print("Failed to generate AI image.")
+            return None
+    except Exception as e:
+        print(f"Image generation error: {e}")
+        return None
+
+
+def compress_image(filepath, quality=75):
+    try:
+        img = Image.open(filepath)
+        img.convert("RGB").save(filepath, "JPEG", quality=quality, optimize=True)
+        print(f"Compressed image at quality={quality}")
+    except Exception as e:
+        print(f"Could not compress image (continuing with original): {e}")
+    return filepath
+
+
+def upload_image_to_wp(image_path, alt_text=""):
+    print("Uploading image to WordPress...")
+    media_url = f"{WP_URL}/wp-json/wp/v2/media"
+    auth = (WP_USERNAME, WP_APP_PASSWORD)
+
+    with open(image_path, 'rb') as file:
+        headers = {
+            'Content-Disposition': f'attachment; filename="{os.path.basename(image_path)}"',
+            'Content-Type': 'image/jpeg'
+        }
+        response = requests.post(media_url, headers=headers, data=file, auth=auth)
+
+    if response.status_code == 201:
+        media_id = response.json()['id']
+        if alt_text:
+            try:
+                requests.post(
+                    f"{WP_URL}/wp-json/wp/v2/media/{media_id}",
+                    json={"alt_text": alt_text, "title": alt_text},
+                    auth=auth
+                )
+            except Exception as e:
+                print(f"Could not set alt text (image still uploaded fine): {e}")
+        return media_id
+    else:
+        print(f"Failed to upload image. Status code: {response.status_code}")
+        print(response.text)
+        return None
+
+
 def get_or_create_category(category_name="Mantras & Chants"):
     categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
@@ -126,7 +198,7 @@ def get_or_create_category(category_name="Mantras & Chants"):
     return None
 
 
-def publish_mantra_post(mantra_data, category_id):
+def publish_mantra_post(mantra_data, category_id, media_id=None):
     """Publishes the mantra as its own real WordPress post, so it gets a
     genuine, unique, indexable URL - not just an anchor on a shared page."""
     print(f"Publishing '{mantra_data['title_en']}' as its own post...")
@@ -156,6 +228,8 @@ def publish_mantra_post(mantra_data, category_id):
             "rank_math_focus_keyword": mantra_data.get('focus_keyword', '')
         }
     }
+    if media_id:
+        payload["featured_media"] = media_id
 
     response = requests.post(post_url, json=payload, auth=auth)
     if response.status_code == 201:
@@ -215,10 +289,19 @@ def main():
         print("Could not generate a fresh, non-duplicate mantra after several attempts. Skipping this run.")
         return
 
+    image_path = generate_ai_image(new_mantra.get('image_prompt', new_mantra['title_en']))
+    media_id = None
+    if image_path:
+        compress_image(image_path)
+        media_id = upload_image_to_wp(image_path, alt_text=new_mantra.get('image_alt_text', new_mantra['title_en']))
+
     category_id = get_or_create_category()
-    post_url = publish_mantra_post(new_mantra, category_id)
+    post_url = publish_mantra_post(new_mantra, category_id, media_id)
 
     add_mantra_to_pool(new_mantra, target_day, post_url)
+
+    if image_path and os.path.exists(image_path):
+        os.remove(image_path)
 
 
 if __name__ == "__main__":
