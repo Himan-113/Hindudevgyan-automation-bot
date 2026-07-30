@@ -4,7 +4,7 @@ import json
 import urllib.parse
 from google import genai
 from dotenv import load_dotenv
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 import time
 from datetime import datetime
 import pytz
@@ -15,7 +15,6 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WP_URL = os.getenv("WP_URL")
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
-
 PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID")
 PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET")
 
@@ -28,15 +27,12 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 def already_published_today():
     print("Checking WordPress for today's panchang post...")
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-
     ist = pytz.timezone('Asia/Kolkata')
     now_ist = datetime.now(ist)
     start_of_day_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
     start_of_day_utc_iso = start_of_day_ist.astimezone(pytz.utc).isoformat()
-
     url = f"{WP_URL}/wp-json/wp/v2/posts"
     params = {"after": start_of_day_utc_iso, "per_page": 30, "_fields": "title"}
-
     try:
         res = requests.get(url, params=params, auth=auth)
         if res.status_code == 200:
@@ -49,13 +45,28 @@ def already_published_today():
     except Exception as e:
         print(f"Could not check WordPress for existing posts (continuing cautiously): {e}")
         return True
-
     return False
 
 
 # ==========================================
-# E-COMMERCE & UPSELL INJECTION
+# CTA HTML BLOCKS
 # ==========================================
+def get_whatsapp_cta_html():
+    return """
+    <div style="background:linear-gradient(135deg,#25D366,#128C7E); border-radius:10px; padding:22px; margin:30px 0; text-align:center;">
+        <h3 style="color:#fff; margin-top:0; font-size:18px;">📲 Join Our WhatsApp Channel</h3>
+        <p style="color:#dcfce7; font-size:14px; margin-bottom:15px;">
+            रोज़ सुबह पाएं — पंचांग, मंत्र, और आध्यात्मिक ज्ञान सीधे WhatsApp पर।<br>
+            <em>Get daily Panchang, Mantras &amp; Spiritual Wisdom every morning.</em>
+        </p>
+        <a href="https://whatsapp.com/channel/0029Vb8RQLz545uzablvPF3x" target="_blank"
+           style="display:inline-block; background:#fff; color:#128C7E; padding:11px 26px; border-radius:25px; font-weight:bold; text-decoration:none; font-size:14px;">
+           📲 Join Free — HinduDevGyan Channel
+        </a>
+    </div>
+    """
+
+
 def get_affiliate_html(category):
     if category.lower() == 'shiva':
         return """
@@ -63,24 +74,18 @@ def get_affiliate_html(category):
             <h4 style="margin-top:0; color:#E65100;">⭐ Recommended for You</h4>
             <p style="font-size:0.9em; color:#666;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
             <div style="display:flex; align-items:center; gap:15px;">
-                <div style="flex:1;">
-                    <strong style="color:#d97706;">5 Mukhi Rudraksha Mala — 108 Beads</strong>
-                    <p style="font-size:14px;">Pure Nepali Rudraksha. Enhances focus and brings Lord Shiva's blessings.</p>
-                </div>
+                <div style="flex:1;"><strong style="color:#d97706;">5 Mukhi Rudraksha Mala — 108 Beads</strong><p style="font-size:14px;">Pure Nepali Rudraksha. Enhances focus and brings Lord Shiva's blessings.</p></div>
                 <a href="https://www.amazon.in/s?k=5+mukhi+rudraksha+mala&tag=hindudevgyan-21" target="_blank" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹399 - Buy on Amazon</a>
             </div>
         </div>
         """
-    elif category.lower() == 'pooja' or category.lower() == 'festival':
+    elif category.lower() in ('pooja', 'festival'):
         return """
         <div style="background:#fff8f0; border:1px solid #FF9800; padding:20px; border-radius:8px; margin-top:30px;">
             <h4 style="margin-top:0; color:#E65100;">⭐ Recommended for You</h4>
             <p style="font-size:0.9em; color:#666;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
             <div style="display:flex; align-items:center; gap:15px;">
-                <div style="flex:1;">
-                    <strong style="color:#d97706;">Brass Puja Thali Set — 7 Piece</strong>
-                    <p style="font-size:14px;">Complete brass thali with diya, incense holder, bell and more for daily puja.</p>
-                </div>
+                <div style="flex:1;"><strong style="color:#d97706;">Brass Puja Thali Set — 7 Piece</strong><p style="font-size:14px;">Complete brass thali with diya, incense holder, bell and more for daily puja.</p></div>
                 <a href="https://www.amazon.in/s?k=brass+puja+thali+set&tag=hindudevgyan-21" target="_blank" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹599 - Buy on Amazon</a>
             </div>
         </div>
@@ -91,10 +96,7 @@ def get_affiliate_html(category):
             <h4 style="margin-top:0; color:#E65100;">⭐ Recommended for You</h4>
             <p style="font-size:0.9em; color:#666;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
             <div style="display:flex; align-items:center; gap:15px;">
-                <div style="flex:1;">
-                    <strong style="color:#d97706;">Pure Copper Kalash with Lid</strong>
-                    <p style="font-size:14px;">Auspicious copper vessel for Puja, Kalash Sthapana and daily water offerings.</p>
-                </div>
+                <div style="flex:1;"><strong style="color:#d97706;">Pure Copper Kalash with Lid</strong><p style="font-size:14px;">Auspicious copper vessel for Puja, Kalash Sthapana and daily water offerings.</p></div>
                 <a href="https://www.amazon.in/s?k=pure+copper+kalash&tag=hindudevgyan-21" target="_blank" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹349 - Buy on Amazon</a>
             </div>
         </div>
@@ -116,7 +118,7 @@ def get_kundli_upsell_html():
     <div style="background:#FDF0DB; border-left:4px solid #E8540A; padding:20px; border-radius:6px; margin-top:30px; margin-bottom:20px;">
         <h3 style="margin-top:0; color:#E8540A;">Curious how today's Nakshatra affects you?</h3>
         <p style="font-size:15px; color:#333; margin-bottom:15px;">Discover your exact career path, marriage compatibility, and planetary dashas based on your exact birth time.</p>
-        <a href="/free-kundli" style="display:inline-block; background:#10b981; color:#fff; padding:12px 20px; border-radius:4px; font-weight:bold; text-decoration:none;">Generate Free Vedic Kundli</a>
+        <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#10b981; color:#fff; padding:12px 20px; border-radius:4px; font-weight:bold; text-decoration:none;">Generate Free Vedic Kundli</a>
         <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#E8540A; color:#fff; padding:12px 20px; border-radius:4px; font-weight:bold; text-decoration:none; margin-left:10px;">Unlock 50-Page Premium PDF (₹149)</a>
     </div>
     """
@@ -128,23 +130,15 @@ def get_kundli_upsell_html():
 def get_prokerala_panchang():
     print("Authenticating with Prokerala API...")
     token_url = "https://api.prokerala.com/token"
-    token_payload = {
-        'grant_type': 'client_credentials',
-        'client_id': PROKERALA_CLIENT_ID,
-        'client_secret': PROKERALA_CLIENT_SECRET
-    }
-
+    token_payload = {'grant_type': 'client_credentials', 'client_id': PROKERALA_CLIENT_ID, 'client_secret': PROKERALA_CLIENT_SECRET}
     try:
         token_res = requests.post(token_url, data=token_payload)
         token_res.raise_for_status()
         access_token = token_res.json().get('access_token')
-
         lat, lon = "28.6139", "77.2090"
         ist_now = datetime.now(pytz.timezone('Asia/Kolkata')).isoformat()
-
         panchang_url = f"https://api.prokerala.com/v2/astrology/panchang?datetime={urllib.parse.quote(ist_now)}&coordinates={lat},{lon}&ayanamsa=1"
         headers = {'Authorization': f'Bearer {access_token}'}
-
         print("Fetching Exact Daily Panchang...")
         astro_res = requests.get(panchang_url, headers=headers)
         astro_res.raise_for_status()
@@ -156,63 +150,33 @@ def get_prokerala_panchang():
 
 def generate_panchang_article(astro_data):
     print("Passing precise astronomical data to AI Editor...")
-
     nakshatra = astro_data['data']['nakshatra'][0]['name']
     tithi = astro_data['data']['tithi'][0]['name']
     karana = astro_data['data']['karana'][0]['name']
     yoga = astro_data['data']['yoga'][0]['name']
 
     prompt = f"""
-    You are an enlightened Vedic Astrologer.
-    Write a 500-word daily horoscope/panchang article for today.
+    You are an enlightened Vedic Astrologer. Write a 500-word daily panchang article for today.
+    Nakshatra: {nakshatra}, Tithi: {tithi}, Karana: {karana}, Yoga: {yoga}
 
-    Here is the exact mathematical astrological data for today:
-    - Nakshatra: {nakshatra}
-    - Tithi: {tithi}
-    - Karana: {karana}
-    - Yoga: {yoga}
+    REQUIREMENTS:
+    1. Write beautiful inspiring guidance based on this Nakshatra and Tithi.
+    2. SEO headline and 5-6 word slug.
+    3. Ecommerce category: "shiva", "pooja", or "general".
+    4. Internal linking: Kundli -> https://hindudevgyan.in/free-kundli/, Vastu -> /category/vastu/, Panchang -> /category/panchang/, Gita/Karma -> /category/gita-wisdom/
+    5. Hindi summary at top: '<h3>हिंदी सारांश:</h3>'
+    6. AI image prompt and alt text.
+    7. meta_title (60 chars), meta_description (155 chars), focus_keyword.
 
-    CRITICAL REQUIREMENTS:
-    1. Write a beautiful, inspiring daily guidance article based on this specific Nakshatra and Tithi.
-    2. Provide an SEO optimized, highly clickable Headline.
-    3. Provide a 5-6 word URL Slug.
-    4. Categorize the article for ecommerce. Choose one: "shiva", "pooja", or "general".
-    5. Internal Linking: You MUST naturally weave at least 3 internal HTML links into the article text to build SEO authority. Use this mapping:
-       - Mentions of "Kundli", "Birth Chart", or "Horoscope" -> <a href="https://hindudevgyan.in/free-kundli/">
-       - Mentions of "Vastu" -> <a href="https://hindudevgyan.in/category/vastu/">
-       - Mentions of "Panchang" or "Muhurat" -> <a href="https://hindudevgyan.in/category/panchang/">
-       - Mentions of "Bhagavad Gita" or "Karma" -> <a href="https://hindudevgyan.in/category/gita-wisdom/">
-       - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
-    6. BILINGUAL WHATSAPP OPTIMIZATION: At the very top of `content_html`, before the English text, you MUST write a 2-3 sentence highly engaging Hindi summary titled '<h3>हिंदी सारांश:</h3>'. This will be pulled by WhatsApp for sharing previews.
-    7. Generate a highly descriptive English prompt for an AI Image Generator representing today's astrological energy (e.g. "Cinematic painting of cosmic planets, mystical glowing aura..."). Do NOT include any text in the image prompt.
-    8. Also generate a short, literal ALT TEXT description of that image in plain English, for accessibility and image SEO.
-    9. SEO META: Provide "meta_title" (under 60 characters, front-loaded with the Nakshatra/Tithi name), "meta_description" (under 155 characters), and "focus_keyword" (2-4 words, e.g. "{nakshatra} {tithi} panchang today").
-
-    Format EXACTLY as valid JSON:
-    {{
-        "headline": "Your English Headline Here",
-        "slug": "your-english-slug-here",
-        "ecommerce_category": "general",
-        "content_html": "<h3>हिंदी सारांश:</h3><p>Your Hindi summary here...</p><h2>Today's Astrological Significance</h2><p>Your English text...</p>",
-        "image_prompt": "Your image prompt here",
-        "image_alt_text": "Short literal description of the image",
-        "meta_title": "SEO title under 60 chars",
-        "meta_description": "SEO description under 155 chars",
-        "focus_keyword": "2-4 word focus phrase"
-    }}
+    Format as valid JSON:
+    {{"headline": "...", "slug": "...", "ecommerce_category": "general", "content_html": "...", "image_prompt": "...", "image_alt_text": "...", "meta_title": "...", "meta_description": "...", "focus_keyword": "..."}}
     """
 
     try:
-        response = client.models.generate_content(
-            model='gemini-flash-latest',
-            contents=prompt
-        )
+        response = client.models.generate_content(model='gemini-flash-latest', contents=prompt)
         text = response.text
-        if text.startswith("```json"):
-            text = text[7:-3].strip()
-        elif text.startswith("```"):
-            text = text[3:-3].strip()
-
+        if text.startswith("```json"): text = text[7:-3].strip()
+        elif text.startswith("```"): text = text[3:-3].strip()
         return json.loads(text)
     except Exception as e:
         print(f"Failed to generate AI article: {e}")
@@ -220,10 +184,10 @@ def generate_panchang_article(astro_data):
 
 
 def generate_ai_image(prompt, filename="panchang_image.jpg"):
-    print(f"Generating Astrological AI Image... ({prompt})")
-    encoded_prompt = urllib.parse.quote(prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true"
-
+    print(f"Generating HD Astrological AI Image... ({prompt})")
+    high_quality_prompt = f"{prompt}, 8k resolution, highly detailed, sharp focus, vivid colors, cosmic lighting, masterwork"
+    encoded_prompt = urllib.parse.quote(high_quality_prompt)
+    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&model=flux"
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         response = requests.get(url, stream=True, headers=headers)
@@ -233,19 +197,62 @@ def generate_ai_image(prompt, filename="panchang_image.jpg"):
                     f.write(chunk)
             print("Successfully generated AI image!")
             return filename
-        else:
-            return None
+        return None
     except Exception:
         return None
 
 
-def compress_image(filepath, quality=75):
+def compress_image(filepath, quality=82):
+    """
+    Applies UnsharpMask filter for crispness, adds a semi-transparent 'HinduDevGyan'
+    watermark badge in the top-right corner to protect image rights on Google Images,
+    and compresses with web-optimized JPEG settings.
+    """
     try:
-        img = Image.open(filepath)
-        img.convert("RGB").save(filepath, "JPEG", quality=quality, optimize=True)
-        print(f"Compressed image at quality={quality}")
+        img = Image.open(filepath).convert("RGBA")
+        width, height = img.size
+
+        # Create transparent overlay for watermark badge
+        overlay = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+        draw = ImageDraw.Draw(overlay)
+
+        text = "🚩 HinduDevGyan"
+        margin = 20
+        badge_width = 180
+        badge_height = 36
+        x1 = width - margin - badge_width
+        y1 = margin
+        x2 = width - margin
+        y2 = margin + badge_height
+
+        # Semi-transparent dark pill with saffron border
+        draw.rounded_rectangle([x1, y1, x2, y2], radius=8, fill=(15, 23, 42, 175), outline=(232, 84, 10, 220), width=1)
+
+        # Draw text centered in badge
+        try:
+            font = ImageFont.truetype("arial.ttf", 16)
+        except Exception:
+            font = ImageFont.load_default()
+
+        bbox = draw.textbbox((0, 0), text, font=font)
+        tw = bbox[2] - bbox[0]
+        th = bbox[3] - bbox[1]
+        tx = x1 + (badge_width - tw) / 2
+        ty = y1 + (badge_height - th) / 2 - 1
+
+        draw.text((tx, ty), text, fill=(255, 255, 255, 240), font=font)
+
+        # Composite overlay
+        combined = Image.alpha_composite(img, overlay).convert("RGB")
+
+        # Apply UnsharpMask sharpening filter
+        sharpened = combined.filter(ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=3))
+
+        # Save with web-optimized JPEG compression
+        sharpened.save(filepath, "JPEG", quality=quality, optimize=True, progressive=True)
+        print(f"Compressed & Watermarked image (Sharpness enhanced, Quality={quality})")
     except Exception as e:
-        print(f"Could not compress image (continuing with original): {e}")
+        print(f"Could not process image (continuing with original): {e}")
     return filepath
 
 
@@ -253,25 +260,16 @@ def upload_image_to_wp(image_path, alt_text=""):
     print("Uploading image to WordPress...")
     media_url = f"{WP_URL}/wp-json/wp/v2/media"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-
     with open(image_path, 'rb') as file:
-        headers = {
-            'Content-Disposition': f'attachment; filename="{os.path.basename(image_path)}"',
-            'Content-Type': 'image/jpeg'
-        }
+        headers = {'Content-Disposition': f'attachment; filename="{os.path.basename(image_path)}"', 'Content-Type': 'image/jpeg'}
         response = requests.post(media_url, headers=headers, data=file, auth=auth)
-
     if response.status_code == 201:
         media_id = response.json()['id']
         if alt_text:
             try:
-                requests.post(
-                    f"{WP_URL}/wp-json/wp/v2/media/{media_id}",
-                    json={"alt_text": alt_text, "title": alt_text},
-                    auth=auth
-                )
+                requests.post(f"{WP_URL}/wp-json/wp/v2/media/{media_id}", json={"alt_text": alt_text, "title": alt_text}, auth=auth)
             except Exception as e:
-                print(f"Could not set alt text (image still uploaded fine): {e}")
+                print(f"Could not set alt text: {e}")
         return media_id
     return None
 
@@ -279,13 +277,11 @@ def upload_image_to_wp(image_path, alt_text=""):
 def get_or_create_category(category_name="Daily Panchang"):
     categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-
     response = requests.get(categories_url, params={"search": category_name}, auth=auth)
     if response.status_code == 200:
         for cat in response.json():
             if cat['name'].lower() == category_name.lower():
                 return cat['id']
-
     response = requests.post(categories_url, json={"name": category_name}, auth=auth)
     if response.status_code == 201:
         return response.json()['id']
@@ -300,7 +296,7 @@ def publish_wp_post(data, astro_data, media_id, category_id):
     nakshatra = astro_data['data']['nakshatra'][0]['name']
     tithi = astro_data['data']['tithi'][0]['name']
 
-    full_content = f"""
+    panchang_box = f"""
     <div style="background:#f8f9fa; border-left:5px solid #2563eb; padding:25px; margin-bottom:30px;">
         <h3 style="color:#1d4ed8; margin-top:0;">Exact Planetary Positions Today</h3>
         <p><strong>Tithi:</strong> {tithi}</p>
@@ -309,25 +305,21 @@ def publish_wp_post(data, astro_data, media_id, category_id):
     """
 
     paragraphs = data['content_html'].split('</p>')
-    if len(paragraphs) > 2:
+    if len(paragraphs) > 3:
+        paragraphs.insert(3, get_ebook_upsell_html())
+    if len(paragraphs) > 5:
         mid_idx = len(paragraphs) // 2
-        paragraphs.insert(mid_idx, get_ebook_upsell_html())
+        paragraphs.insert(mid_idx, get_whatsapp_cta_html())
     mid_injected_html = '</p>'.join(paragraphs)
 
-    full_content += mid_injected_html
-    full_content += get_affiliate_html(data['ecommerce_category'])
+    full_content = panchang_box + mid_injected_html
     full_content += get_kundli_upsell_html()
-    full_content += """
-    <hr style="margin-top:30px;">
-    <p style="font-size:12px; color:#888;"><em><strong>Disclaimer:</strong> This daily astrological forecast is algorithmically generated based on precise astronomical calculations and traditional Vedic Astrology principles. It is for spiritual guidance and entertainment purposes only.</em></p>
-    """
+    full_content += get_affiliate_html(data['ecommerce_category'])
+    full_content += """<hr style="margin-top:30px;"><p style="font-size:12px; color:#888;"><em><strong>Disclaimer:</strong> This daily astrological forecast is algorithmically generated based on precise astronomical calculations. It is for spiritual guidance and entertainment purposes only.</em></p>"""
 
     payload = {
-        "title": data['headline'],
-        "content": full_content,
-        "status": "publish",
-        "slug": data['slug'],
-        "categories": [category_id] if category_id else [],
+        "title": data['headline'], "content": full_content, "status": "publish",
+        "slug": data['slug'], "categories": [category_id] if category_id else [],
         "meta": {
             "rank_math_title": data.get('meta_title', data['headline'])[:60],
             "rank_math_description": data.get('meta_description', '')[:160],
@@ -346,36 +338,27 @@ def publish_wp_post(data, astro_data, media_id, category_id):
 
 def main():
     print("Starting Daily Panchang & Monetization Bot...")
-
     if not all([GEMINI_API_KEY, WP_URL, WP_USERNAME, WP_APP_PASSWORD, PROKERALA_CLIENT_ID, PROKERALA_CLIENT_SECRET]):
         print("ERROR: Missing environment variables.")
         return
-
     if already_published_today():
         print("A panchang/horoscope post already exists for today. Skipping to avoid a duplicate.")
         return
-
     astro_data = get_prokerala_panchang()
     if not astro_data:
         return
-
     article_data = generate_panchang_article(astro_data)
     if not article_data:
         return
-
     print(f"AI Editor selected headline: {article_data['headline']}")
     print(f"Focus Keyword: {article_data.get('focus_keyword', 'N/A')}")
-
     image_path = generate_ai_image(article_data['image_prompt'])
     media_id = None
     if image_path:
         compress_image(image_path)
         media_id = upload_image_to_wp(image_path, alt_text=article_data.get('image_alt_text', article_data['headline']))
-
     category_id = get_or_create_category()
-
     publish_wp_post(article_data, astro_data, media_id, category_id)
-
     if image_path and os.path.exists(image_path):
         os.remove(image_path)
 
