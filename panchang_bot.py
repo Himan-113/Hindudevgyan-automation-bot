@@ -53,73 +53,72 @@ def already_published_today():
 # ==========================================
 def get_whatsapp_cta_html():
     return """
-    <div style="background:linear-gradient(135deg,#25D366,#128C7E); border-radius:10px; padding:22px; margin:30px 0; text-align:center;">
-        <h3 style="color:#fff; margin-top:0; font-size:18px;">📲 Join Our WhatsApp Channel</h3>
-        <p style="color:#dcfce7; font-size:14px; margin-bottom:15px;">
+    <div style="background:linear-gradient(135deg,#25D366,#128C7E); border-radius:10px; padding:18px 14px; margin:25px 0; text-align:center; box-sizing:border-box; max-width:100%;">
+        <h3 style="color:#fff; margin-top:0; font-size:17px;">📲 Join Our WhatsApp Channel</h3>
+        <p style="color:#dcfce7; font-size:13px; margin-bottom:14px;">
             रोज़ सुबह पाएं — पंचांग, मंत्र, और आध्यात्मिक ज्ञान सीधे WhatsApp पर।<br>
             <em>Get daily Panchang, Mantras &amp; Spiritual Wisdom every morning.</em>
         </p>
         <a href="https://whatsapp.com/channel/0029Vb8RQLz545uzablvPF3x" target="_blank"
-           style="display:inline-block; background:#fff; color:#128C7E; padding:11px 26px; border-radius:25px; font-weight:bold; text-decoration:none; font-size:14px;">
+           style="display:inline-block; background:#fff; color:#128C7E; padding:10px 20px; border-radius:25px; font-weight:bold; text-decoration:none; font-size:13px; max-width:100%; box-sizing:border-box;">
            📲 Join Free — HinduDevGyan Channel
         </a>
     </div>
     """
 
 
-def get_affiliate_html(category):
+def get_affiliate_html(category="general"):
     if category.lower() == 'shiva':
-        return """
-        <div style="background:#fff8f0; border:1px solid #FF9800; padding:20px; border-radius:8px; margin-top:30px;">
-            <h4 style="margin-top:0; color:#E65100;">⭐ Recommended for You</h4>
-            <p style="font-size:0.9em; color:#666;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
-            <div style="display:flex; align-items:center; gap:15px;">
-                <div style="flex:1;"><strong style="color:#d97706;">5 Mukhi Rudraksha Mala — 108 Beads</strong><p style="font-size:14px;">Pure Nepali Rudraksha. Enhances focus and brings Lord Shiva's blessings.</p></div>
-                <a href="https://www.amazon.in/s?k=5+mukhi+rudraksha+mala&tag=hindudevgyan-21" target="_blank" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹399 - Buy on Amazon</a>
-            </div>
-        </div>
-        """
+        title = "5 Mukhi Rudraksha Mala — 108 Beads"
+        desc = "Pure Nepali Rudraksha. Enhances focus and brings Lord Shiva's blessings."
+        link = "https://www.amazon.in/s?k=5+mukhi+rudraksha+mala&tag=hindudevgyan-21"
+        price = "₹399 - Buy on Amazon"
     elif category.lower() in ('pooja', 'festival'):
-        return """
-        <div style="background:#fff8f0; border:1px solid #FF9800; padding:20px; border-radius:8px; margin-top:30px;">
-            <h4 style="margin-top:0; color:#E65100;">⭐ Recommended for You</h4>
-            <p style="font-size:0.9em; color:#666;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
-            <div style="display:flex; align-items:center; gap:15px;">
-                <div style="flex:1;"><strong style="color:#d97706;">Brass Puja Thali Set — 7 Piece</strong><p style="font-size:14px;">Complete brass thali with diya, incense holder, bell and more for daily puja.</p></div>
-                <a href="https://www.amazon.in/s?k=brass+puja+thali+set&tag=hindudevgyan-21" target="_blank" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹599 - Buy on Amazon</a>
-            </div>
-        </div>
-        """
+        title = "Brass Puja Thali Set — 7 Piece"
+        desc = "Complete brass thali with diya, incense holder, bell and more for daily puja."
+        link = "https://www.amazon.in/s?k=brass+puja+thali+set&tag=hindudevgyan-21"
+        price = "₹599 - Buy on Amazon"
     else:
-        return """
-        <div style="background:#fff8f0; border:1px solid #FF9800; padding:20px; border-radius:8px; margin-top:30px;">
-            <h4 style="margin-top:0; color:#E65100;">⭐ Recommended for You</h4>
-            <p style="font-size:0.9em; color:#666;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
-            <div style="display:flex; align-items:center; gap:15px;">
-                <div style="flex:1;"><strong style="color:#d97706;">Pure Copper Kalash with Lid</strong><p style="font-size:14px;">Auspicious copper vessel for Puja, Kalash Sthapana and daily water offerings.</p></div>
-                <a href="https://www.amazon.in/s?k=pure+copper+kalash&tag=hindudevgyan-21" target="_blank" style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold;">₹349 - Buy on Amazon</a>
+        title = "Pure Copper Kalash with Lid"
+        desc = "Auspicious copper vessel for Puja, Kalash Sthapana and daily water offerings."
+        link = "https://www.amazon.in/s?k=pure+copper+kalash&tag=hindudevgyan-21"
+        price = "₹349 - Buy on Amazon"
+
+    return f"""
+    <div style="background:#fff8f0; border:1px solid #FF9800; padding:16px; border-radius:8px; margin-top:25px; box-sizing:border-box; max-width:100%;">
+        <h4 style="margin-top:0; color:#E65100; font-size:16px;">⭐ Recommended for You</h4>
+        <p style="font-size:12px; color:#666; margin-bottom:10px;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:12px;">
+            <div style="flex:1; min-width:180px;">
+                <strong style="color:#d97706; font-size:14px;">{title}</strong>
+                <p style="font-size:13px; color:#444; margin:4px 0 0 0;">{desc}</p>
             </div>
+            <a href="{link}" target="_blank"
+               style="background:#FF9800; color:#fff; padding:9px 16px; text-decoration:none; border-radius:4px; font-weight:bold; font-size:13px; display:inline-block; box-sizing:border-box;">{price}</a>
         </div>
-        """
+    </div>
+    """
 
 
 def get_ebook_upsell_html():
     return """
-    <div style="background:#fffbeb; border:2px dashed #f59e0b; padding:25px; border-radius:8px; margin:30px 0; text-align:center;">
-        <h3 style="margin-top:0; color:#b45309; font-size:22px;">Transform Your Home's Energy Today!</h3>
-        <p style="font-size:16px; color:#78350f; margin-bottom:20px;">Discover the ancient secrets to attracting wealth, health, and absolute harmony. Download our premium 5-chapter Vastu Shastra guide instantly.</p>
-        <a href="https://rzp.io/rzp/VtX5q0e" target="_blank" style="display:inline-block; background:#f59e0b; color:#fff; padding:15px 30px; border-radius:30px; font-weight:bold; text-decoration:none; font-size:18px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">Unlock The Vastu Shastra Mastery Guide (₹99)</a>
+    <div style="background:#fffbeb; border:2px dashed #f59e0b; padding:18px 12px; border-radius:8px; margin:25px 0; text-align:center; box-sizing:border-box; max-width:100%;">
+        <h3 style="margin-top:0; color:#b45309; font-size:18px;">Transform Your Home's Energy Today!</h3>
+        <p style="font-size:14px; color:#78350f; margin-bottom:15px;">Discover the ancient secrets to attracting wealth, health, and absolute harmony. Download our premium 5-chapter Vastu Shastra guide instantly.</p>
+        <a href="https://rzp.io/rzp/VtX5q0e" target="_blank" style="display:inline-block; background:#f59e0b; color:#fff; padding:11px 20px; border-radius:30px; font-weight:bold; text-decoration:none; font-size:14px; box-shadow:0 4px 6px rgba(0,0,0,0.1); max-width:100%; box-sizing:border-box;">Unlock The Vastu Shastra Mastery Guide (₹99)</a>
     </div>
     """
 
 
 def get_kundli_upsell_html():
     return """
-    <div style="background:#FDF0DB; border-left:4px solid #E8540A; padding:20px; border-radius:6px; margin-top:30px; margin-bottom:20px;">
-        <h3 style="margin-top:0; color:#E8540A;">Curious how today's Nakshatra affects you?</h3>
-        <p style="font-size:15px; color:#333; margin-bottom:15px;">Discover your exact career path, marriage compatibility, and planetary dashas based on your exact birth time.</p>
-        <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#10b981; color:#fff; padding:12px 20px; border-radius:4px; font-weight:bold; text-decoration:none;">Generate Free Vedic Kundli</a>
-        <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#E8540A; color:#fff; padding:12px 20px; border-radius:4px; font-weight:bold; text-decoration:none; margin-left:10px;">Unlock 50-Page Premium PDF (₹149)</a>
+    <div style="background:#FDF0DB; border-left:4px solid #E8540A; padding:16px; border-radius:6px; margin:25px 0; box-sizing:border-box; max-width:100%;">
+        <h3 style="margin-top:0; color:#E8540A; font-size:18px;">Curious how today's Nakshatra affects you?</h3>
+        <p style="font-size:14px; color:#333; margin-bottom:14px;">Discover your exact career path, marriage compatibility, and planetary dashas based on your exact birth time.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#10b981; color:#fff; padding:10px 16px; border-radius:4px; font-weight:bold; text-decoration:none; font-size:13px; text-align:center; flex:1; min-width:160px; box-sizing:border-box;">Generate Free Vedic Kundli</a>
+            <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#E8540A; color:#fff; padding:10px 16px; border-radius:4px; font-weight:bold; text-decoration:none; font-size:13px; text-align:center; flex:1; min-width:160px; box-sizing:border-box;">Unlock 50-Page Premium PDF (₹149)</a>
+        </div>
     </div>
     """
 
@@ -165,7 +164,7 @@ def generate_panchang_article(astro_data):
     3. Ecommerce category: "shiva", "pooja", or "general".
     4. Internal linking: Kundli -> https://hindudevgyan.in/free-kundli/, Vastu -> /category/vastu/, Panchang -> /category/panchang/, Gita/Karma -> /category/gita-wisdom/
     5. Hindi summary at top: '<h3>हिंदी सारांश:</h3>'
-    6. AI image prompt and alt text.
+    6. AI image prompt: Write a short prompt for an AI Image Generator. STYLE MUST BE REALISTIC PHOTOGRAPHY (like National Geographic or 35mm camera shot, e.g. "Cinematic realistic photography of a traditional brass Panchang calendar, oil diya lamps, marigold flowers on a temple altar, 35mm lens"). Do NOT use cartoonish, glowing, or digital art style, and do NOT use text.
     7. meta_title (60 chars), meta_description (155 chars), focus_keyword.
 
     Format as valid JSON:
@@ -184,10 +183,10 @@ def generate_panchang_article(astro_data):
 
 
 def generate_ai_image(prompt, filename="panchang_image.jpg"):
-    print(f"Generating HD Astrological AI Image... ({prompt})")
-    high_quality_prompt = f"{prompt}, 8k resolution, highly detailed, sharp focus, vivid colors, cosmic lighting, masterwork"
+    print(f"Generating Photorealistic HD Astrological AI Image... ({prompt})")
+    high_quality_prompt = f"Professional realistic photography of {prompt}, shot on 35mm lens, f/1.8, natural golden hour lighting, 8k resolution, National Geographic style, highly detailed, photorealistic"
     encoded_prompt = urllib.parse.quote(high_quality_prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&model=flux"
+    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true"
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         response = requests.get(url, stream=True, headers=headers)
@@ -202,11 +201,11 @@ def generate_ai_image(prompt, filename="panchang_image.jpg"):
         return None
 
 
-def compress_image(filepath, quality=82):
+def compress_image(filepath, quality=88):
     """
-    Overlays the actual HinduDevGyan logo (logo.png) in the top-right corner,
-    applies UnsharpMask sharpening filter for HD crispness,
-    and compresses with web-optimized JPEG settings.
+    Overlays logo.png safely inset from edges (margin_right=38, margin_top=22)
+    so thumbnail cropping/object-fit NEVER cuts off the logo.
+    Applies high-quality UnsharpMask sharpening filter for HD crispness.
     """
     try:
         img = Image.open(filepath).convert("RGBA")
@@ -220,32 +219,38 @@ def compress_image(filepath, quality=82):
             datas = logo.getdata()
             new_data = []
             for item in datas:
-                if item[0] > 230 and item[1] > 230 and item[2] > 230:
+                if item[0] > 220 and item[1] > 220 and item[2] > 220:
                     new_data.append((255, 255, 255, 0))
                 else:
                     new_data.append(item)
             logo.putdata(new_data)
 
-            # Resize logo to width = 210px (maintaining aspect ratio)
-            target_w = 210
+            # Auto-crop excess transparent margins
+            bbox = logo.getbbox()
+            if bbox:
+                logo = logo.crop(bbox)
+
+            # Resize logo to compact target width
+            target_w = 110
             w_percent = (target_w / float(logo.size[0]))
             target_h = int((float(logo.size[1]) * float(w_percent)))
             logo = logo.resize((target_w, target_h), Image.Resampling.LANCZOS)
 
-            # White semi-transparent rounded backing card for high visibility
-            margin = 18
-            padding = 8
+            # Inset margins so object-fit:cover on thumbnails never clips the logo!
+            margin_right = 38
+            margin_top = 22
+            padding = 6
             card_w = target_w + (padding * 2)
             card_h = target_h + (padding * 2)
 
-            card_x1 = width - margin - card_w
-            card_y1 = margin
-            card_x2 = width - margin
-            card_y2 = margin + card_h
+            card_x1 = width - margin_right - card_w
+            card_y1 = margin_top
+            card_x2 = width - margin_right
+            card_y2 = margin_top + card_h
 
             overlay = Image.new("RGBA", (width, height), (255, 255, 255, 0))
             draw = ImageDraw.Draw(overlay)
-            draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=8, fill=(255, 255, 255, 225), outline=(232, 84, 10, 240), width=2)
+            draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=6, fill=(255, 255, 255, 235), outline=(232, 84, 10, 240), width=1)
 
             # Composite card onto image
             img = Image.alpha_composite(img, overlay)
@@ -255,11 +260,11 @@ def compress_image(filepath, quality=82):
             logo_y = card_y1 + padding
             img.paste(logo, (logo_x, logo_y), logo)
 
-        # Apply UnsharpMask sharpening filter
+        # Apply UnsharpMask sharpening filter for HD crispness
         combined = img.convert("RGB")
-        sharpened = combined.filter(ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=3))
+        sharpened = combined.filter(ImageFilter.UnsharpMask(radius=1.2, percent=125, threshold=2))
 
-        # Save with web-optimized JPEG compression
+        # Save with high-quality JPEG settings (quality=88)
         sharpened.save(filepath, "JPEG", quality=quality, optimize=True, progressive=True)
         print(f"Compressed & Logo Watermarked image (Sharpness enhanced, Quality={quality})")
     except Exception as e:
