@@ -155,20 +155,25 @@ def generate_panchang_article(astro_data):
     yoga = astro_data['data']['yoga'][0]['name']
 
     prompt = f"""
-    You are an enlightened Vedic Astrologer. Write a 500-word daily panchang article for today.
+    You are an enlightened Vedic Astrologer, Senior Marketing Editor, and RankMath SEO Specialist. Write a high-CTR 500-word daily panchang article for today.
     Nakshatra: {nakshatra}, Tithi: {tithi}, Karana: {karana}, Yoga: {yoga}
 
-    REQUIREMENTS:
-    1. Write beautiful inspiring guidance based on this Nakshatra and Tithi.
-    2. SEO headline and 5-6 word slug.
-    3. Ecommerce category: "shiva", "pooja", or "general".
-    4. Internal linking: Kundli -> https://hindudevgyan.in/free-kundli/, Vastu -> /category/vastu/, Panchang -> /category/panchang/, Gita/Karma -> /category/gita-wisdom/
-    5. Hindi summary at top: '<h3>हिंदी सारांश:</h3>'
-    6. AI image prompt: Write a short prompt for an AI Image Generator. STYLE MUST BE REALISTIC PHOTOGRAPHY (like National Geographic or 35mm camera shot, e.g. "Cinematic realistic photography of a traditional brass Panchang calendar, oil diya lamps, marigold flowers on a temple altar, 35mm lens"). Do NOT use cartoonish, glowing, or digital art style, and do NOT use text.
-    7. meta_title (60 chars), meta_description (155 chars), focus_keyword.
+    CRITICAL REQUIREMENTS:
+    1. Focus Keyword: Generate a clear 3-4 word focus phrase (e.g. "Today Panchang Shubh Muhurat" or "Daily Vedic Panchang").
+    2. Headline (H1): Write a magnetic, click-tempting English headline like a Google News & Discover Editor. Trigger curiosity and awe (e.g. "Sacred Panchang Today: Auspicious Muhurat & Daily Nakshatra Wisdom").
+    3. URL Slug: A 4-5 word English slug derived DIRECTLY from the Focus Keyword (e.g. today-panchang-shubh-muhurat).
+    4. Content First Paragraph: The VERY FIRST paragraph of `content_html` (after Hindi summary) MUST contain the exact Focus Keyword bolded inside `<strong>` tags (e.g., `<p>According to <strong>Today Panchang Shubh Muhurat</strong>, the celestial alignments bring immense spiritual energy...</p>`).
+    5. Internal linking: Kundli -> https://hindudevgyan.in/free-kundli/, Vastu -> /category/vastu/, Panchang -> /category/panchang/, Gita/Karma -> /category/gita-wisdom/
+    6. BILINGUAL: At the very top of content_html write a Hindi summary titled '<h3>हिंदी सारांश:</h3>'.
+    7. AI Image Prompt: Write a 100% LITERAL visual scene description in ENGLISH of the physical scene for a photorealistic featured image. Describe concrete physical objects (e.g. "A traditional brass Panchang calendar manuscript resting on a sacred marble altar, surrounded by orange marigold flowers and glowing oil diya lamps, warm golden morning light, 8k realistic photography, National Geographic style"). CRITICAL: NEVER use abstract astrological symbols, anime, or Hindi words in the prompt. Describe real physical objects so the AI renders an authentic photo. Do NOT include text.
+    8. Image Alt Text: A short literal description of that image containing the Focus Keyword (for Image SEO).
+    9. SEO META:
+       - meta_title: Under 60 characters, keyword-front-loaded.
+       - meta_description: Under 155 characters. IT MUST START WITH OR CONTAIN the exact Focus Keyword in the first sentence.
+    10. Ecommerce category: "shiva", "pooja", or "general".
 
     Format as valid JSON:
-    {{"headline": "...", "slug": "...", "ecommerce_category": "general", "content_html": "...", "image_prompt": "...", "image_alt_text": "...", "meta_title": "...", "meta_description": "...", "focus_keyword": "..."}}
+    {{"headline": "...", "focus_keyword": "...", "slug": "...", "ecommerce_category": "general", "content_html": "...", "image_prompt": "...", "image_alt_text": "...", "meta_title": "...", "meta_description": "..."}}
     """
 
     try:
@@ -182,61 +187,118 @@ def generate_panchang_article(astro_data):
         return None
 
 
-def generate_ai_image(prompt, filename="panchang_image.jpg"):
-    print(f"Generating Photorealistic HD Astrological AI Image... ({prompt})")
+def generate_ai_image(prompt, topic_keyword="panchang", filename="panchang_image.webp"):
+    print(f"Sourcing Real Authentic HD Photo or Smart AI Image... ({topic_keyword})")
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    temp_jpg = "temp_panchang_bg.jpg"
+    seed = random.randint(1, 999999)
+
+    # Tier 1: Real Photo Sourcing
+    unsplash_url = f"https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=1200&h=630&fit=crop"
+    try:
+        res = requests.get(unsplash_url, headers=headers, timeout=8)
+        if res.status_code == 200 and len(res.content) > 5000:
+            with open(temp_jpg, "wb") as f:
+                f.write(res.content)
+            print("Successfully retrieved Real Authentic 4K Photography for Panchang!")
+            return temp_jpg
+    except Exception as e:
+        print(f"Real photo engine notice ({e}), proceeding to AI engine...")
+
+    # Tier 2: Photorealistic AI Engine
     high_quality_prompt = f"Professional realistic photography of {prompt}, shot on 35mm lens, f/1.8, natural golden hour lighting, 8k resolution, National Geographic style, highly detailed, photorealistic"
     encoded_prompt = urllib.parse.quote(high_quality_prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true"
+    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&seed={seed}"
+
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        response = requests.get(url, stream=True, headers=headers)
-        if response.status_code == 200:
-            with open(filename, 'wb') as f:
+        response = requests.get(url, stream=True, headers=headers, timeout=12)
+        if response.status_code == 200 and len(response.content) > 5000:
+            with open(temp_jpg, 'wb') as f:
                 for chunk in response.iter_content(1024):
                     f.write(chunk)
-            print("Successfully generated AI image!")
-            return filename
-        return None
-    except Exception:
-        return None
+            print("Successfully generated fresh photorealistic AI background image!")
+            return temp_jpg
+    except Exception as e:
+        print(f"Pollinations AI notice ({e}), using HD fallback background...")
+
+    # Tier 3: Fallback
+    try:
+        fallback_url = f"https://picsum.photos/seed/{seed}/1200/630"
+        res = requests.get(fallback_url, headers=headers, timeout=8)
+        if res.status_code == 200:
+            with open(temp_jpg, 'wb') as f:
+                f.write(res.content)
+            return temp_jpg
+    except Exception as e:
+        print(f"Fallback image error: {e}")
+
+    return None
 
 
-def compress_image(filepath, quality=88):
+def compress_image(temp_filepath, output_filename="panchang_image.webp", headline_text="", category_text="PANCHANG"):
     """
-    Overlays logo.png safely inset from edges (margin_right=38, margin_top=22)
-    so thumbnail cropping/object-fit NEVER cuts off the logo.
-    Applies high-quality UnsharpMask sharpening filter for HD crispness.
+    Overlays a high-CTR news thumbnail text banner at bottom,
+    insets logo.png at top-right, applies UnsharpMask sharpening filter for HD crispness,
+    and compresses to ultra-fast WebP format (25-45 KB).
     """
     try:
-        img = Image.open(filepath).convert("RGBA")
+        img = Image.open(temp_filepath).convert("RGBA")
         width, height = img.size
 
+        # 1. Dark Gradient Banner at bottom
+        overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        draw_ov = ImageDraw.Draw(overlay)
+        banner_height = 220
+        for y in range(height - banner_height, height):
+            alpha = int(220 * ((y - (height - banner_height)) / banner_height))
+            draw_ov.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
+        img = Image.alpha_composite(img, overlay)
+
+        draw = ImageDraw.Draw(img)
+
+        # 2. Font selection
+        try:
+            font_title = ImageFont.truetype(r"C:\Windows\Fonts\arialbd.ttf", 36)
+            font_badge = ImageFont.truetype(r"C:\Windows\Fonts\arialbd.ttf", 20)
+        except Exception:
+            font_title = ImageFont.load_default()
+            font_badge = ImageFont.load_default()
+
+        # 3. Category Pill Badge
+        badge_text = category_text.upper()[:25]
+        try:
+            badge_bbox = font_badge.getbbox(badge_text)
+            badge_w = (badge_bbox[2] - badge_bbox[0]) + 24
+            badge_h = (badge_bbox[3] - badge_bbox[1]) + 14
+        except Exception:
+            badge_w, badge_h = 160, 32
+
+        badge_x1 = 38
+        badge_y1 = height - 165
+        badge_x2 = badge_x1 + badge_w
+        badge_y2 = badge_y1 + badge_h
+
+        draw.rounded_rectangle([badge_x1, badge_y1, badge_x2, badge_y2], radius=6, fill=(232, 84, 10, 240))
+        draw.text((badge_x1 + 12, badge_y1 + 5), badge_text, font=font_badge, fill=(255, 255, 255))
+
+        # 4. Main Title Overlay
+        clean_title = headline_text.upper()[:52]
+        draw.text((38, height - 105), clean_title, font=font_title, fill=(255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0))
+
+        # 5. Inset Top-Right Logo Badge
         logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
         if os.path.exists(logo_path):
             logo = Image.open(logo_path).convert("RGBA")
 
-            # Convert near-white background pixels to transparent
-            datas = logo.getdata()
-            new_data = []
-            for item in datas:
-                if item[0] > 220 and item[1] > 220 and item[2] > 220:
-                    new_data.append((255, 255, 255, 0))
-                else:
-                    new_data.append(item)
-            logo.putdata(new_data)
-
-            # Auto-crop excess transparent margins
             bbox = logo.getbbox()
             if bbox:
                 logo = logo.crop(bbox)
 
-            # Resize logo to compact target width
             target_w = 110
             w_percent = (target_w / float(logo.size[0]))
             target_h = int((float(logo.size[1]) * float(w_percent)))
             logo = logo.resize((target_w, target_h), Image.Resampling.LANCZOS)
 
-            # Inset margins so object-fit:cover on thumbnails never clips the logo!
             margin_right = 38
             margin_top = 22
             padding = 6
@@ -248,36 +310,38 @@ def compress_image(filepath, quality=88):
             card_x2 = width - margin_right
             card_y2 = margin_top + card_h
 
-            overlay = Image.new("RGBA", (width, height), (255, 255, 255, 0))
-            draw = ImageDraw.Draw(overlay)
-            draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=6, fill=(255, 255, 255, 235), outline=(232, 84, 10, 240), width=1)
+            card_ov = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+            card_draw = ImageDraw.Draw(card_ov)
+            card_draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=6, fill=(255, 255, 255, 235), outline=(232, 84, 10, 240), width=1)
+            img = Image.alpha_composite(img, card_ov)
+            img.paste(logo, (card_x1 + padding, card_y1 + padding), logo)
 
-            # Composite card onto image
-            img = Image.alpha_composite(img, overlay)
-
-            # Paste logo inside card
-            logo_x = card_x1 + padding
-            logo_y = card_y1 + padding
-            img.paste(logo, (logo_x, logo_y), logo)
-
-        # Apply UnsharpMask sharpening filter for HD crispness
+        # 6. Apply UnsharpMask & Save WebP
         combined = img.convert("RGB")
         sharpened = combined.filter(ImageFilter.UnsharpMask(radius=1.2, percent=125, threshold=2))
+        sharpened.save(output_filename, "WEBP", quality=85)
+        print(f"Compressed & News Banner Watermarked image (WebP, Sharpness enhanced, File: {output_filename})")
 
-        # Save with high-quality JPEG settings (quality=88)
-        sharpened.save(filepath, "JPEG", quality=quality, optimize=True, progressive=True)
-        print(f"Compressed & Logo Watermarked image (Sharpness enhanced, Quality={quality})")
+        if os.path.exists(temp_filepath) and temp_filepath != output_filename:
+            try:
+                os.remove(temp_filepath)
+            except Exception:
+                pass
+        return output_filename
     except Exception as e:
         print(f"Could not process image (continuing with original): {e}")
-    return filepath
+        return temp_filepath
 
 
 def upload_image_to_wp(image_path, alt_text=""):
-    print("Uploading image to WordPress...")
+    print(f"Uploading WebP AI image ({image_path}) to WordPress Media Library...")
     media_url = f"{WP_URL}/wp-json/wp/v2/media"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
+
+    mime_type = "image/webp" if image_path.endswith(".webp") else "image/jpeg"
+
     with open(image_path, 'rb') as file:
-        headers = {'Content-Disposition': f'attachment; filename="{os.path.basename(image_path)}"', 'Content-Type': 'image/jpeg'}
+        headers = {'Content-Disposition': f'attachment; filename="{os.path.basename(image_path)}"', 'Content-Type': mime_type}
         response = requests.post(media_url, headers=headers, data=file, auth=auth)
     if response.status_code == 201:
         media_id = response.json()['id']
@@ -371,15 +435,20 @@ def main():
         return
     print(f"AI Editor selected headline: {article_data['headline']}")
     print(f"Focus Keyword: {article_data.get('focus_keyword', 'N/A')}")
-    image_path = generate_ai_image(article_data['image_prompt'])
+    temp_image = generate_ai_image(article_data['image_prompt'], topic_keyword=article_data.get('focus_keyword', 'panchang'))
     media_id = None
-    if image_path:
-        compress_image(image_path)
-        media_id = upload_image_to_wp(image_path, alt_text=article_data.get('image_alt_text', article_data['headline']))
+    final_image = None
+    if temp_image:
+        output_webp = f"{article_data['slug']}.webp"
+        final_image = compress_image(temp_image, output_filename=output_webp, headline_text=article_data['headline'], category_text="PANCHANG")
+        media_id = upload_image_to_wp(final_image, alt_text=article_data.get('image_alt_text', article_data['headline']))
     category_id = get_or_create_category()
     publish_wp_post(article_data, astro_data, media_id, category_id)
-    if image_path and os.path.exists(image_path):
-        os.remove(image_path)
+    if final_image and os.path.exists(final_image):
+        try:
+            os.remove(final_image)
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

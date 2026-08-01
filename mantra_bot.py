@@ -146,42 +146,41 @@ def generate_new_mantra(target_day, existing_sanskrit_openers):
         )
 
     prompt = f"""
-    You are an enlightened Vedic Scholar and SEO Expert. Provide one short, well-known,
-    authentic Sanskrit mantra or shloka appropriate for {day_description}.
-    {avoid_text}
+    You are an enlightened Vedic Scholar, Senior Marketing Editor, and RankMath SEO Specialist.
+    Your task is to craft a high-CTR, RankMath 100/100 SEO-optimized daily mantra post for {day_description}.
 
-    Requirements:
-    1. Must be a genuine, traditional Sanskrit mantra (not invented) - one that is
-       widely recognized and commonly recited, appropriate for {day_description}.
+    CRITICAL REQUIREMENTS:
+    1. Select a powerful, authentic Sanskrit mantra dedicated to the deity/planet of {day_description},
+       widely recognized and commonly recited.
     2. Keep it short - 1 to 2 lines of Sanskrit, suitable for a small card display.
     3. Provide an accurate Hindi meaning (2-3 sentences).
     4. Provide an accurate English translation (2-3 sentences).
     5. Provide a short title in English and in Hindi.
-    6. Write a slightly longer (100-150 word) English explanation of the mantra's
-       significance and when/how it is traditionally recited - this will be published
-       as its own short article, so it needs enough substance to be a real page.
-    7. SEO META: "meta_title" (under 60 characters, e.g. "Shani Mantra - Meaning & Benefits"),
-       "meta_description" (under 155 characters), "focus_keyword" (2-4 words,
-       e.g. "Shani mantra meaning").
-    8. URL Slug: a 3-5 word English slug for this mantra, hyphenated (e.g. "shani-mantra-meaning-benefits").
-    9. AI Image Prompt: Write a short, highly-descriptive English prompt for an AI Image Generator. STYLE MUST BE REALISTIC PHOTOGRAPHY (like National Geographic or 35mm camera shot, e.g. "Cinematic realistic photography of sacred brass deity idol, oil diya lamps, lotus flowers in ancient Indian temple, 35mm lens"). Do NOT use cartoonish, glowing, or digital art style, and do NOT use text in the image.
-    10. Image Alt Text: A short, literal English description of that same image, for
-        accessibility and image SEO (different from the creative prompt).
+    6. Focus Keyword: Generate a 3-4 word focus phrase (e.g., "Shani Mantra Meaning & Benefits").
+    7. Headline (H1): Write a magnetic, click-tempting English headline like a Google News & Discover Editor. Trigger curiosity and awe (e.g., "Sacred Shani Mantra: Powerful Chants for Protection & Peace").
+    8. URL Slug: A 4-5 word English slug derived DIRECTLY from the Focus Keyword (e.g., shani-mantra-meaning-benefits).
+    9. Explanation: Write a 150-word English explanation. The VERY FIRST sentence MUST contain the exact Focus Keyword bolded inside `<strong>` tags (e.g., `<p>Reciting the <strong>Shani Mantra Meaning & Benefits</strong> brings immense cosmic harmony...</p>`).
+    10. SEO META:
+        - meta_title: Under 60 characters, keyword-front-loaded.
+        - meta_description: Under 155 characters. IT MUST START WITH OR CONTAIN the exact Focus Keyword in the first sentence.
+    11. AI Image Prompt: Write a 100% LITERAL visual scene description in ENGLISH of the physical scene for a photorealistic featured image. Describe concrete physical objects (e.g., "A sacred brass deity idol placed on a black marble altar with lit mustard oil diya lamps and dark lotus flowers, warm golden morning light, 8k realistic photography, National Geographic style"). CRITICAL: NEVER use abstract terms, anime, or Hindi words in the prompt. Describe real physical objects so the AI renders an authentic photo. Do NOT include text.
+    12. Image Alt Text: A short literal description of that image containing the Focus Keyword (for Image SEO).
 
     Format EXACTLY as valid JSON, no markdown, no extra text:
     {{
         "title_en": "Short English Title",
         "title_hi": "संक्षिप्त हिंदी शीर्षक",
+        "focus_keyword": "Focus Keyword Here",
+        "headline": "Magnetic High-CTR Headline",
+        "slug": "url-slug-here",
         "sanskrit": "The Sanskrit mantra text",
         "hindi": "Hindi meaning",
         "english": "English translation",
-        "explanation": "100-150 word explanation of significance and how it's used",
+        "explanation": "Explanation with <strong>FocusKeyword</strong> in first sentence",
         "meta_title": "SEO title under 60 chars",
-        "meta_description": "SEO description under 155 chars",
-        "focus_keyword": "2-4 word focus phrase",
-        "slug": "3-5-word-url-slug",
-        "image_prompt": "Your image generation prompt here",
-        "image_alt_text": "Short literal description of the image"
+        "meta_description": "SEO description starting with FocusKeyword",
+        "image_prompt": "Literal visual English image generation prompt",
+        "image_alt_text": "Short description containing FocusKeyword"
     }}
     """
 
@@ -201,65 +200,118 @@ def generate_new_mantra(target_day, existing_sanskrit_openers):
         return None
 
 
-def generate_ai_image(prompt, filename="mantra_image.jpg"):
-    print(f"Generating Photorealistic HD AI Image... ({prompt})")
+def generate_ai_image(prompt, topic_keyword="mantras", filename="mantra_image.webp"):
+    print(f"Sourcing Real Authentic HD Photo or Smart AI Image... ({topic_keyword})")
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    temp_jpg = "temp_mantra_bg.jpg"
+    seed = random.randint(1, 999999)
+
+    # Tier 1: Real Photo Sourcing
+    unsplash_url = f"https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&h=630&fit=crop"
+    try:
+        res = requests.get(unsplash_url, headers=headers, timeout=8)
+        if res.status_code == 200 and len(res.content) > 5000:
+            with open(temp_jpg, "wb") as f:
+                f.write(res.content)
+            print("Successfully retrieved Real Authentic 4K Photography for Mantras & Chants!")
+            return temp_jpg
+    except Exception as e:
+        print(f"Real photo engine notice ({e}), proceeding to AI engine...")
+
+    # Tier 2: Photorealistic AI Engine
     high_quality_prompt = f"Professional realistic photography of {prompt}, shot on 35mm lens, f/1.8, natural golden hour lighting, 8k resolution, National Geographic style, highly detailed, photorealistic"
     encoded_prompt = urllib.parse.quote(high_quality_prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true"
+    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&seed={seed}"
 
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        response = requests.get(url, stream=True, headers=headers)
-        if response.status_code == 200:
-            with open(filename, 'wb') as f:
+        response = requests.get(url, stream=True, headers=headers, timeout=12)
+        if response.status_code == 200 and len(response.content) > 5000:
+            with open(temp_jpg, 'wb') as f:
                 for chunk in response.iter_content(1024):
                     f.write(chunk)
-            print("Successfully generated AI image!")
-            return filename
-        else:
-            print("Failed to generate AI image.")
-            return None
+            print("Successfully generated fresh photorealistic AI background image!")
+            return temp_jpg
     except Exception as e:
-        print(f"Image generation error: {e}")
-        return None
+        print(f"Pollinations AI notice ({e}), using HD fallback background...")
+
+    # Tier 3: Fallback
+    try:
+        fallback_url = f"https://picsum.photos/seed/{seed}/1200/630"
+        res = requests.get(fallback_url, headers=headers, timeout=8)
+        if res.status_code == 200:
+            with open(temp_jpg, 'wb') as f:
+                f.write(res.content)
+            return temp_jpg
+    except Exception as e:
+        print(f"Fallback image error: {e}")
+
+    return None
 
 
-def compress_image(filepath, quality=88):
+def compress_image(temp_filepath, output_filename="mantra_image.webp", headline_text="", category_text="MANTRAS & CHANTS"):
     """
-    Overlays logo.png safely inset from edges (margin_right=38, margin_top=22)
-    so thumbnail cropping/object-fit NEVER cuts off the logo.
-    Applies high-quality UnsharpMask sharpening filter for HD crispness.
+    Overlays a high-CTR news thumbnail text banner at bottom,
+    insets logo.png at top-right, applies UnsharpMask sharpening filter for HD crispness,
+    and compresses to ultra-fast WebP format (25-45 KB).
     """
     try:
-        img = Image.open(filepath).convert("RGBA")
+        img = Image.open(temp_filepath).convert("RGBA")
         width, height = img.size
 
+        # 1. Dark Gradient Banner at bottom
+        overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        draw_ov = ImageDraw.Draw(overlay)
+        banner_height = 220
+        for y in range(height - banner_height, height):
+            alpha = int(220 * ((y - (height - banner_height)) / banner_height))
+            draw_ov.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
+        img = Image.alpha_composite(img, overlay)
+
+        draw = ImageDraw.Draw(img)
+
+        # 2. Font selection
+        try:
+            font_title = ImageFont.truetype(r"C:\Windows\Fonts\arialbd.ttf", 36)
+            font_badge = ImageFont.truetype(r"C:\Windows\Fonts\arialbd.ttf", 20)
+        except Exception:
+            font_title = ImageFont.load_default()
+            font_badge = ImageFont.load_default()
+
+        # 3. Category Pill Badge
+        badge_text = category_text.upper()[:25]
+        try:
+            badge_bbox = font_badge.getbbox(badge_text)
+            badge_w = (badge_bbox[2] - badge_bbox[0]) + 24
+            badge_h = (badge_bbox[3] - badge_bbox[1]) + 14
+        except Exception:
+            badge_w, badge_h = 160, 32
+
+        badge_x1 = 38
+        badge_y1 = height - 165
+        badge_x2 = badge_x1 + badge_w
+        badge_y2 = badge_y1 + badge_h
+
+        draw.rounded_rectangle([badge_x1, badge_y1, badge_x2, badge_y2], radius=6, fill=(232, 84, 10, 240))
+        draw.text((badge_x1 + 12, badge_y1 + 5), badge_text, font=font_badge, fill=(255, 255, 255))
+
+        # 4. Main Title Overlay
+        clean_title = headline_text.upper()[:52]
+        draw.text((38, height - 105), clean_title, font=font_title, fill=(255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0))
+
+        # 5. Inset Top-Right Logo Badge
         logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
         if os.path.exists(logo_path):
             logo = Image.open(logo_path).convert("RGBA")
 
-            # Convert near-white background pixels to transparent
-            datas = logo.getdata()
-            new_data = []
-            for item in datas:
-                if item[0] > 220 and item[1] > 220 and item[2] > 220:
-                    new_data.append((255, 255, 255, 0))
-                else:
-                    new_data.append(item)
-            logo.putdata(new_data)
-
-            # Auto-crop excess transparent margins
             bbox = logo.getbbox()
             if bbox:
                 logo = logo.crop(bbox)
 
-            # Resize logo to compact target width
             target_w = 110
             w_percent = (target_w / float(logo.size[0]))
             target_h = int((float(logo.size[1]) * float(w_percent)))
             logo = logo.resize((target_w, target_h), Image.Resampling.LANCZOS)
 
-            # Inset margins so object-fit:cover on thumbnails never clips the logo!
             margin_right = 38
             margin_top = 22
             padding = 6
@@ -271,39 +323,40 @@ def compress_image(filepath, quality=88):
             card_x2 = width - margin_right
             card_y2 = margin_top + card_h
 
-            overlay = Image.new("RGBA", (width, height), (255, 255, 255, 0))
-            draw = ImageDraw.Draw(overlay)
-            draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=6, fill=(255, 255, 255, 235), outline=(232, 84, 10, 240), width=1)
+            card_ov = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+            card_draw = ImageDraw.Draw(card_ov)
+            card_draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=6, fill=(255, 255, 255, 235), outline=(232, 84, 10, 240), width=1)
+            img = Image.alpha_composite(img, card_ov)
+            img.paste(logo, (card_x1 + padding, card_y1 + padding), logo)
 
-            # Composite card onto image
-            img = Image.alpha_composite(img, overlay)
-
-            # Paste logo inside card
-            logo_x = card_x1 + padding
-            logo_y = card_y1 + padding
-            img.paste(logo, (logo_x, logo_y), logo)
-
-        # Apply UnsharpMask sharpening filter for HD crispness
+        # 6. Apply UnsharpMask & Save WebP
         combined = img.convert("RGB")
         sharpened = combined.filter(ImageFilter.UnsharpMask(radius=1.2, percent=125, threshold=2))
+        sharpened.save(output_filename, "WEBP", quality=85)
+        print(f"Compressed & News Banner Watermarked image (WebP, Sharpness enhanced, File: {output_filename})")
 
-        # Save with high-quality JPEG settings (quality=88)
-        sharpened.save(filepath, "JPEG", quality=quality, optimize=True, progressive=True)
-        print(f"Compressed & Logo Watermarked image (Sharpness enhanced, Quality={quality})")
+        if os.path.exists(temp_filepath) and temp_filepath != output_filename:
+            try:
+                os.remove(temp_filepath)
+            except Exception:
+                pass
+        return output_filename
     except Exception as e:
         print(f"Could not process image (continuing with original): {e}")
-    return filepath
+        return temp_filepath
 
 
 def upload_image_to_wp(image_path, alt_text=""):
-    print("Uploading image to WordPress...")
+    print(f"Uploading WebP AI image ({image_path}) to WordPress Media Library...")
     media_url = f"{WP_URL}/wp-json/wp/v2/media"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
+
+    mime_type = "image/webp" if image_path.endswith(".webp") else "image/jpeg"
 
     with open(image_path, 'rb') as file:
         headers = {
             'Content-Disposition': f'attachment; filename="{os.path.basename(image_path)}"',
-            'Content-Type': 'image/jpeg'
+            'Content-Type': mime_type
         }
         response = requests.post(media_url, headers=headers, data=file, auth=auth)
 
@@ -321,7 +374,6 @@ def upload_image_to_wp(image_path, alt_text=""):
         return media_id
     else:
         print(f"Failed to upload image. Status code: {response.status_code}")
-        print(response.text)
         return None
 
 
@@ -439,19 +491,24 @@ def main():
         print("Could not generate a fresh, non-duplicate mantra after several attempts. Skipping this run.")
         return
 
-    image_path = generate_ai_image(new_mantra.get('image_prompt', new_mantra['title_en']))
+    temp_image = generate_ai_image(new_mantra.get('image_prompt', new_mantra['title_en']), topic_keyword=new_mantra.get('slug', 'mantra'))
     media_id = None
-    if image_path:
-        compress_image(image_path)
-        media_id = upload_image_to_wp(image_path, alt_text=new_mantra.get('image_alt_text', new_mantra['title_en']))
+    final_image = None
+    if temp_image:
+        output_webp = f"{new_mantra.get('slug', 'mantra')}.webp"
+        final_image = compress_image(temp_image, output_filename=output_webp, headline_text=new_mantra.get('headline', new_mantra['title_en']), category_text="MANTRAS & CHANTS")
+        media_id = upload_image_to_wp(final_image, alt_text=new_mantra.get('image_alt_text', new_mantra['title_en']))
 
     category_id = get_or_create_category()
     post_url = publish_mantra_post(new_mantra, category_id, media_id, target_day)
 
     add_mantra_to_pool(new_mantra, target_day, post_url)
 
-    if image_path and os.path.exists(image_path):
-        os.remove(image_path)
+    if final_image and os.path.exists(final_image):
+        try:
+            os.remove(final_image)
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
