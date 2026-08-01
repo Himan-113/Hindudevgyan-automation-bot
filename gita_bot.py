@@ -240,6 +240,33 @@ def generate_ai_image(prompt, topic_keyword="gita wisdom", filename="gita_image.
     return None
 
 
+def get_cross_platform_fonts(size_title=34, size_badge=18):
+    font_paths = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        r"C:\Windows\Fonts\arialbd.ttf",
+        r"C:\Windows\Fonts\arial.ttf"
+    ]
+    font_title, font_badge = None, None
+    for path in font_paths:
+        if os.path.exists(path):
+            try:
+                font_title = ImageFont.truetype(path, size_title)
+                font_badge = ImageFont.truetype(path, size_badge)
+                break
+            except Exception:
+                pass
+    if not font_title:
+        try:
+            font_title = ImageFont.load_default(size=size_title)
+            font_badge = ImageFont.load_default(size=size_badge)
+        except Exception:
+            font_title = ImageFont.load_default()
+            font_badge = ImageFont.load_default()
+
+    return font_title, font_badge
+
+
 def compress_image(temp_filepath, output_filename="gita_image.webp", headline_text="", category_text="GITA WISDOM"):
     """
     Overlays a high-CTR news thumbnail text banner at bottom,
@@ -261,13 +288,8 @@ def compress_image(temp_filepath, output_filename="gita_image.webp", headline_te
 
         draw = ImageDraw.Draw(img)
 
-        # 2. Font selection
-        try:
-            font_title = ImageFont.truetype(r"C:\Windows\Fonts\arialbd.ttf", 36)
-            font_badge = ImageFont.truetype(r"C:\Windows\Fonts\arialbd.ttf", 20)
-        except Exception:
-            font_title = ImageFont.load_default()
-            font_badge = ImageFont.load_default()
+        # 2. Cross-platform Font Selection (Linux + Windows bold font support)
+        font_title, font_badge = get_cross_platform_fonts(size_title=34, size_badge=18)
 
         # 3. Category Pill Badge
         badge_text = category_text.upper()[:25]

@@ -289,28 +289,56 @@ def rewrite_article_and_image_prompt(original_title):
         return None
 
 
+def get_cross_platform_fonts(size_title=34, size_badge=18):
+    font_paths = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        r"C:\Windows\Fonts\arialbd.ttf",
+        r"C:\Windows\Fonts\arial.ttf"
+    ]
+    font_title, font_badge = None, None
+    for path in font_paths:
+        if os.path.exists(path):
+            try:
+                font_title = ImageFont.truetype(path, size_title)
+                font_badge = ImageFont.truetype(path, size_badge)
+                break
+            except Exception:
+                pass
+    if not font_title:
+        try:
+            font_title = ImageFont.load_default(size=size_title)
+            font_badge = ImageFont.load_default(size=size_badge)
+        except Exception:
+            font_title = ImageFont.load_default()
+            font_badge = ImageFont.load_default()
+
+    return font_title, font_badge
+
+
 def generate_ai_image(prompt, topic_keyword="indian temple", filename="featured_image.webp"):
     print(f"Phase 4: Sourcing Real Authentic HD Photo or Smart AI Image... ({topic_keyword})")
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
     temp_jpg = "temp_bg.jpg"
     seed = random.randint(1, 999999)
 
-    # Tier 1: Try Sourcing Real Authentic HD Photography
-    clean_kw = topic_keyword.lower().replace(" ", "-")
-    unsplash_url = f"https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&h=630&fit=crop"
-    if "shiva" in clean_kw or "mahakal" in clean_kw:
-        unsplash_url = f"https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=1200&h=630&fit=crop"
-    elif "eclipse" in clean_kw or "grahan" in clean_kw:
-        unsplash_url = f"https://images.unsplash.com/photo-1532693322450-2cb5c511067d?w=1200&h=630&fit=crop"
-    elif "temple" in clean_kw or "pooja" in clean_kw:
-        unsplash_url = f"https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=1200&h=630&fit=crop"
+    # Tier 1: Try Sourcing Real Authentic HD Photography by Topic Keyword
+    clean_kw = topic_keyword.lower()
+    if any(k in clean_kw for k in ["shiva", "mahakal", "bhasma", "jyotirlinga", "sawan", "kashi", "vishwanath"]):
+        unsplash_url = "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=1200&h=630&fit=crop"
+    elif any(k in clean_kw for k in ["eclipse", "grahan", "surya"]):
+        unsplash_url = "https://images.unsplash.com/photo-1532693322450-2cb5c511067d?w=1200&h=630&fit=crop"
+    elif any(k in clean_kw for k in ["teej", "hariyali", "festivals", "vrat", "rakhi", "diwali", "pooja", "puja"]):
+        unsplash_url = "https://images.unsplash.com/photo-1605371924599-2d0365da1ae0?w=1200&h=630&fit=crop"
+    else:
+        unsplash_url = "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=1200&h=630&fit=crop"
 
     try:
         res = requests.get(unsplash_url, headers=headers, timeout=8)
         if res.status_code == 200 and len(res.content) > 5000:
             with open(temp_jpg, "wb") as f:
                 f.write(res.content)
-            print(f"Successfully retrieved Real Authentic 4K Photography for {topic_keyword}!")
+            print(f"Successfully retrieved Real Authentic 4K Photography for '{topic_keyword}'!")
             return temp_jpg
     except Exception as e:
         print(f"Real photo engine notice ({e}), proceeding to AI engine...")
@@ -366,13 +394,8 @@ def compress_image(temp_filepath, output_filename="featured_image.webp", headlin
 
         draw = ImageDraw.Draw(img)
 
-        # 2. Font selection
-        try:
-            font_title = ImageFont.truetype(r"C:\Windows\Fonts\arialbd.ttf", 36)
-            font_badge = ImageFont.truetype(r"C:\Windows\Fonts\arialbd.ttf", 20)
-        except Exception:
-            font_title = ImageFont.load_default()
-            font_badge = ImageFont.load_default()
+        # 2. Cross-platform Font Selection (Linux + Windows bold font support)
+        font_title, font_badge = get_cross_platform_fonts(size_title=34, size_badge=18)
 
         # 3. Category Pill Badge
         badge_text = category_text.upper()[:25]
