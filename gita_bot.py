@@ -193,49 +193,44 @@ def sloka_already_used(sanskrit_text, recent_content_blobs):
 
 
 def generate_ai_image(prompt, topic_keyword="gita wisdom", filename="gita_image.webp"):
-    print(f"Sourcing Real Authentic HD Photo or Smart AI Image... ({topic_keyword})")
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    print(f"Generating 100% Relevant Artwork via Google Imagen 3 API... ({topic_keyword})")
     temp_jpg = "temp_gita_bg.jpg"
     seed = random.randint(1, 999999)
 
-    # Tier 1: Real Photo Sourcing
-    unsplash_url = f"https://images.unsplash.com/photo-1544717305-2782549b5136?w=1200&h=630&fit=crop"
+    # Tier 1: Primary Engine - Google Imagen 3 API (`imagen-3.0-generate-002`)
     try:
-        res = requests.get(unsplash_url, headers=headers, timeout=8)
-        if res.status_code == 200 and len(res.content) > 5000:
+        res = client.models.generate_images(
+            model='imagen-3.0-generate-002',
+            prompt=f"Photorealistic 8k artwork of {prompt}, divine lighting, highly detailed, 35mm lens, masterpiece",
+            config=dict(
+                number_of_images=1,
+                output_mime_type='image/jpeg',
+                aspect_ratio='16:9'
+            )
+        )
+        if res and res.generated_images and len(res.generated_images[0].image.image_bytes) > 20000:
             with open(temp_jpg, "wb") as f:
-                f.write(res.content)
-            print("Successfully retrieved Real Authentic 4K Photography for Gita Wisdom!")
+                f.write(res.generated_images[0].image.image_bytes)
+            print("Successfully generated 100% relevant HD artwork via Google Imagen 3 API!")
             return temp_jpg
     except Exception as e:
-        print(f"Real photo engine notice ({e}), proceeding to AI engine...")
+        print(f"Google Imagen 3 API notice ({e}), failing over to Pollinations AI engine...")
 
-    # Tier 2: Photorealistic AI Engine
-    high_quality_prompt = f"Professional realistic photography of {prompt}, shot on 35mm lens, f/1.8, natural golden hour lighting, 8k resolution, National Geographic style, highly detailed, photorealistic"
-    encoded_prompt = urllib.parse.quote(high_quality_prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&seed={seed}"
+    # Tier 2: Secondary Engine - Pollinations AI
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    encoded_prompt = urllib.parse.quote(f"Photorealistic 8k artwork of {prompt}, divine golden lighting, National Geographic style")
+    pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&seed={seed}"
 
     try:
-        response = requests.get(url, stream=True, headers=headers, timeout=12)
-        if response.status_code == 200 and len(response.content) > 5000:
+        response = requests.get(pollinations_url, stream=True, headers=headers, timeout=14)
+        if response.status_code == 200 and len(response.content) > 10000:
             with open(temp_jpg, 'wb') as f:
                 for chunk in response.iter_content(1024):
                     f.write(chunk)
-            print("Successfully generated fresh photorealistic AI background image!")
+            print("Successfully generated fresh photorealistic AI background image via Pollinations engine!")
             return temp_jpg
     except Exception as e:
-        print(f"Pollinations AI notice ({e}), using HD fallback background...")
-
-    # Tier 3: Fallback
-    try:
-        fallback_url = f"https://picsum.photos/seed/{seed}/1200/630"
-        res = requests.get(fallback_url, headers=headers, timeout=8)
-        if res.status_code == 200:
-            with open(temp_jpg, 'wb') as f:
-                f.write(res.content)
-            return temp_jpg
-    except Exception as e:
-        print(f"Fallback image error: {e}")
+        print(f"Pollinations AI backup notice ({e})")
 
     return None
 

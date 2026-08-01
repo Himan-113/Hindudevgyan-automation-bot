@@ -20,12 +20,24 @@ WP_URL = os.getenv("WP_URL")
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 RSS_FEEDS = [
     "https://www.abplive.com/lifestyle/religion/feed",
     "https://www.jagran.com/rss/spiritual",
     "https://zeenews.india.com/hindi/religion/rss"
+]
+
+ALLOWED_CATEGORIES = [
+    "Festivals & Vrat",
+    "Temples & Pilgrimage",
+    "Astrology & Horoscope",
+    "Vedic Wisdom",
+    "Gita Wisdom",
+    "Panchang",
+    "Mantras & Chants",
+    "Mythology",
+    "Spiritual News"
 ]
 
 
@@ -34,14 +46,14 @@ RSS_FEEDS = [
 # ==========================================
 def get_whatsapp_cta_html():
     return """
-    <div style="background:linear-gradient(135deg,#25D366,#128C7E); border-radius:10px; padding:18px 14px; margin:25px 0; text-align:center; box-sizing:border-box; max-width:100%;">
-        <h3 style="color:#fff; margin-top:0; font-size:17px;">📲 Join Our WhatsApp Channel</h3>
-        <p style="color:#dcfce7; font-size:13px; margin-bottom:14px;">
-            रोज़ सुबह पाएं — पंचांग, मंत्र, और आध्यात्मिक ज्ञान सीधे WhatsApp पर।<br>
+    <div style="background:linear-gradient(135deg,#25D366,#128C7E); border-radius:10px; padding:22px; margin:30px 0; text-align:center;">
+        <h3 style="color:#fff; margin-top:0; font-size:18px;">📲 Join Our WhatsApp Channel</h3>
+        <p style="color:#dcfce7; font-size:14px; margin-bottom:15px;">
+            रोज़ सुबह पाएं — पंचांग, मंत्र, और आध्यात्मिक ज्ञान सीधे WhatsApp पर。<br>
             <em>Get daily Panchang, Mantras &amp; Spiritual Wisdom every morning.</em>
         </p>
         <a href="https://whatsapp.com/channel/0029Vb8RQLz545uzablvPF3x" target="_blank"
-           style="display:inline-block; background:#fff; color:#128C7E; padding:10px 20px; border-radius:25px; font-weight:bold; text-decoration:none; font-size:13px; max-width:100%; box-sizing:border-box;">
+           style="display:inline-block; background:#fff; color:#128C7E; padding:11px 26px; border-radius:25px; font-weight:bold; text-decoration:none; font-size:14px;">
            📲 Join Free — HinduDevGyan Channel
         </a>
     </div>
@@ -50,24 +62,22 @@ def get_whatsapp_cta_html():
 
 def get_kundli_upsell_html():
     return """
-    <div style="background:#FDF0DB; border-left:4px solid #E8540A; padding:16px; border-radius:6px; margin:25px 0; box-sizing:border-box; max-width:100%;">
-        <h3 style="margin-top:0; color:#E8540A; font-size:18px;">🔮 Curious About Your Birth Chart?</h3>
-        <p style="font-size:14px; color:#333; margin-bottom:14px;">Discover your exact career path, marriage compatibility, and planetary dashas based on your exact birth time.</p>
-        <div style="display:flex; flex-wrap:wrap; gap:10px;">
-            <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#10b981; color:#fff; padding:10px 16px; border-radius:4px; font-weight:bold; text-decoration:none; font-size:13px; text-align:center; flex:1; min-width:160px; box-sizing:border-box;">✨ Generate Free Vedic Kundli</a>
-            <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#E8540A; color:#fff; padding:10px 16px; border-radius:4px; font-weight:bold; text-decoration:none; font-size:13px; text-align:center; flex:1; min-width:160px; box-sizing:border-box;">📄 Unlock 50-Page PDF (₹149)</a>
-        </div>
+    <div style="background:#FDF0DB; border-left:4px solid #E8540A; padding:20px; border-radius:6px; margin-top:30px; margin-bottom:20px;">
+        <h3 style="margin-top:0; color:#E8540A;">🔮 Curious About Your Birth Chart?</h3>
+        <p style="font-size:15px; color:#333; margin-bottom:15px;">Discover your exact career path, marriage compatibility, and planetary dashas based on your exact birth time.</p>
+        <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#10b981; color:#fff; padding:11px 20px; border-radius:4px; font-weight:bold; text-decoration:none; font-size:14px;">✨ Generate Free Vedic Kundli</a>
+        <a href="https://hindudevgyan.in/free-kundli/" style="display:inline-block; background:#E8540A; color:#fff; padding:11px 20px; border-radius:4px; font-weight:bold; text-decoration:none; margin-left:8px; font-size:14px;">📄 Unlock 50-Page PDF (₹149)</a>
     </div>
     """
 
 
 def get_ebook_upsell_html():
     return """
-    <div style="background:#fffbeb; border:2px dashed #f59e0b; padding:18px 12px; border-radius:8px; margin:25px 0; text-align:center; box-sizing:border-box; max-width:100%;">
-        <h3 style="margin-top:0; color:#b45309; font-size:18px;">Transform Your Home's Energy Today!</h3>
-        <p style="font-size:14px; color:#78350f; margin-bottom:15px;">Discover the ancient secrets to attracting wealth, health, and harmony. Download our premium 5-chapter Vastu Shastra guide instantly.</p>
+    <div style="background:#fffbeb; border:2px dashed #f59e0b; padding:22px; border-radius:8px; margin:30px 0; text-align:center;">
+        <h3 style="margin-top:0; color:#b45309; font-size:20px;">Transform Your Home's Energy Today!</h3>
+        <p style="font-size:15px; color:#78350f; margin-bottom:18px;">Discover the ancient secrets to attracting wealth, health, and harmony. Download our premium 5-chapter Vastu Shastra guide instantly.</p>
         <a href="https://rzp.io/rzp/VtX5q0e" target="_blank"
-           style="display:inline-block; background:#f59e0b; color:#fff; padding:11px 20px; border-radius:30px; font-weight:bold; text-decoration:none; font-size:14px; box-shadow:0 4px 6px rgba(0,0,0,0.1); max-width:100%; box-sizing:border-box;">
+           style="display:inline-block; background:#f59e0b; color:#fff; padding:13px 28px; border-radius:30px; font-weight:bold; text-decoration:none; font-size:16px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
            📖 Unlock Vastu Shastra Mastery Guide (₹99)
         </a>
     </div>
@@ -75,36 +85,52 @@ def get_ebook_upsell_html():
 
 
 def get_affiliate_html(category="general"):
-    if category.lower() == 'shiva':
-        title = "5 Mukhi Rudraksha Mala — 108 Beads"
-        desc = "Pure Nepali Rudraksha. Enhances focus and brings Lord Shiva's blessings."
-        link = "https://www.amazon.in/s?k=5+mukhi+rudraksha+mala&tag=hindudevgyan-21"
-        price = "₹399 - Buy on Amazon"
-    elif category.lower() in ('pooja', 'festival', 'gita', 'karma'):
-        title = "Brass Puja Thali Set — 7 Piece"
-        desc = "Complete brass thali with diya, incense holder, bell and more for daily puja."
-        link = "https://www.amazon.in/s?k=brass+puja+thali+set&tag=hindudevgyan-21"
-        price = "₹599 - Buy on Amazon"
-    else:
-        title = "Pure Copper Kalash with Lid"
-        desc = "Auspicious copper vessel for Puja, Kalash Sthapana and daily water offerings."
-        link = "https://www.amazon.in/s?k=pure+copper+kalash&tag=hindudevgyan-21"
-        price = "₹349 - Buy on Amazon"
-
-    return f"""
-    <div style="background:#fff8f0; border:1px solid #FF9800; padding:16px; border-radius:8px; margin-top:25px; box-sizing:border-box; max-width:100%;">
-        <h4 style="margin-top:0; color:#E65100; font-size:16px;">⭐ Recommended for You</h4>
-        <p style="font-size:12px; color:#666; margin-bottom:10px;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
-        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:12px;">
-            <div style="flex:1; min-width:180px;">
-                <strong style="color:#d97706; font-size:14px;">{title}</strong>
-                <p style="font-size:13px; color:#444; margin:4px 0 0 0;">{desc}</p>
+    cat_str = str(category).lower()
+    if 'shiva' in cat_str:
+        return """
+        <div style="background:#fff8f0; border:1px solid #FF9800; padding:20px; border-radius:8px; margin-top:30px;">
+            <h4 style="margin-top:0; color:#E65100;">⭐ Recommended for You</h4>
+            <p style="font-size:0.9em; color:#666;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div style="flex:1;">
+                    <strong style="color:#d97706;">5 Mukhi Rudraksha Mala — 108 Beads</strong>
+                    <p style="font-size:14px;">Pure Nepali Rudraksha. Enhances focus and brings Lord Shiva's blessings.</p>
+                </div>
+                <a href="https://www.amazon.in/s?k=5+mukhi+rudraksha+mala&tag=hindudevgyan-21" target="_blank"
+                   style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold; white-space:nowrap;">₹399 - Buy on Amazon</a>
             </div>
-            <a href="{link}" target="_blank"
-               style="background:#FF9800; color:#fff; padding:9px 16px; text-decoration:none; border-radius:4px; font-weight:bold; font-size:13px; display:inline-block; box-sizing:border-box;">{price}</a>
         </div>
-    </div>
-    """
+        """
+    elif any(k in cat_str for k in ['pooja', 'festival', 'gita', 'karma']):
+        return """
+        <div style="background:#fff8f0; border:1px solid #FF9800; padding:20px; border-radius:8px; margin-top:30px;">
+            <h4 style="margin-top:0; color:#E65100;">⭐ Recommended for You</h4>
+            <p style="font-size:0.9em; color:#666;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div style="flex:1;">
+                    <strong style="color:#d97706;">Brass Puja Thali Set — 7 Piece</strong>
+                    <p style="font-size:14px;">Complete brass thali with diya, incense holder, bell and more for daily puja.</p>
+                </div>
+                <a href="https://www.amazon.in/s?k=brass+puja+thali+set&tag=hindudevgyan-21" target="_blank"
+                   style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold; white-space:nowrap;">₹599 - Buy on Amazon</a>
+            </div>
+        </div>
+        """
+    else:
+        return """
+        <div style="background:#fff8f0; border:1px solid #FF9800; padding:20px; border-radius:8px; margin-top:30px;">
+            <h4 style="margin-top:0; color:#E65100;">⭐ Recommended for You</h4>
+            <p style="font-size:0.9em; color:#666;"><em>Contains affiliate links. We earn a small commission at no extra cost to you.</em></p>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div style="flex:1;">
+                    <strong style="color:#d97706;">Pure Copper Kalash with Lid</strong>
+                    <p style="font-size:14px;">Auspicious copper vessel for Puja, Kalash Sthapana and daily water offerings.</p>
+                </div>
+                <a href="https://www.amazon.in/s?k=pure+copper+kalash&tag=hindudevgyan-21" target="_blank"
+                   style="background:#FF9800; color:#fff; padding:10px 20px; text-decoration:none; border-radius:4px; font-weight:bold; white-space:nowrap;">₹349 - Buy on Amazon</a>
+            </div>
+        </div>
+        """
 
 
 # ==========================================
@@ -208,47 +234,56 @@ def deduplicate_and_select(raw_news):
         return []
 
 
+def clean_category_name(raw_category):
+    """Cleans up raw category string from Gemini output so it NEVER contains 'Ecommerce' or invalid text."""
+    if not raw_category:
+        return "Spiritual News"
+    clean = str(raw_category).replace("Ecommerce", "").replace("Category:", "").strip()
+    for cat in ALLOWED_CATEGORIES:
+        if cat.lower() in clean.lower():
+            return cat
+    return "Spiritual News"
+
+
 def rewrite_article_and_image_prompt(original_title):
     print("Phase 3: Scholar AI & Marketing Editor writing article and designing visual image prompt...")
     prompt = f"""
-    You are an elite Digital Marketing Manager, Vedic Scholar, and SEO Specialist for a top Hindu News Portal. Write a highly engaging, high-CTR, deeply respectful, and RankMath 100/100 SEO-optimized article in ENGLISH based on this news topic:
+    You are an elite Hindu Religious Scholar, Vedic Expert, and SEO Specialist. Write a highly engaging, deeply respectful, and SEO-optimized article in ENGLISH based on this Hindi news/topic:
     "{original_title}"
 
     CRITICAL REQUIREMENTS:
     1. Language: The entire article MUST be written in high-quality, premium English.
-    2. Headline (H1): Write a magnetic, click-tempting English headline like a Google News & Discover Editor. Trigger curiosity and awe (e.g., using strong hooks like "Sacred Dawn:", "Revealed:", "Why Thousands Gather For", "The Secret Of"). IT MUST BE 100% UNIQUE.
-    3. Focus Keyword: Pick a clear 2-4 word focus phrase (e.g., "Ujjain Mahakal Bhasma Aarti" or "Nag Panchami Puja").
-    4. URL Slug: Generate a 4-5 word English slug derived DIRECTLY from the Focus Keyword (e.g., ujjain-mahakal-bhasma-aarti).
-    5. SEO Meta:
-       - MetaTitle: Under 60 characters, keyword-front-loaded.
-       - MetaDescription: Under 155 characters. IT MUST START WITH OR CONTAIN the exact Focus Keyword in the first sentence.
-    6. Content First Paragraph: The VERY FIRST paragraph of `content_html` MUST contain the exact Focus Keyword bolded inside `<strong>` tags (e.g. `<p>Experience the divine power of <strong>Ujjain Mahakal Bhasma Aarti</strong>, one of the most sacred Vedic rituals...</p>`).
-    7. Internal Linking: You MUST naturally weave at least 3 internal HTML links into the article text to build SEO authority. Use this mapping:
+    2. Headline (H1): Write a highly clickable, English headline. IT MUST BE 100% UNIQUE. Find a creative, spiritual angle.
+    3. URL Slug: Generate a 5-6 word English translation of the headline, formatted with hyphens (e.g., significance-of-kashi-vishwanath-sawan).
+    4. Internal Linking: You MUST naturally weave at least 3 internal HTML links into the article text to build SEO authority. Use this mapping:
        - Mentions of "Kundli", "Birth Chart", or "Horoscope" -> <a href="https://hindudevgyan.in/free-kundli/">
        - Mentions of "Vastu" -> <a href="https://hindudevgyan.in/category/vastu/">
        - Mentions of "Panchang" or "Muhurat" -> <a href="https://hindudevgyan.in/category/panchang/">
        - Mentions of "Bhagavad Gita" or "Karma" -> <a href="https://hindudevgyan.in/category/gita-wisdom/">
        - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
-    8. Formatting: Use proper HTML headings (<h2>) like "Significance", "Mythology". Use short paragraphs, bold important names/facts, and include at least one bulleted list.
-    9. BILINGUAL WHATSAPP OPTIMIZATION: At the very top of your HTML Content, before the English text, you MUST write a 2-3 sentence highly engaging Hindi summary titled '<h3>हिंदी सारांश:</h3>'. This will be pulled by WhatsApp for sharing previews.
-    10. AI Image Prompt: Write a 100% LITERAL, VISUAL description in ENGLISH of the physical scene for a photorealistic featured image. Describe concrete physical objects (e.g. "A sacred black stone Shiva Lingam adorned with holy white ash, fresh orange marigold flower garlands, and glowing oil diya lamps in an ancient stone temple sanctum, 8k realistic photography, National Geographic style"). CRITICAL: NEVER use Hindi proper nouns (like 'Bhasma Aarti', 'Chhari Mubarak'), abstract terms, or chapter numbers. Describe real physical objects so the AI renders an authentic photo. Do NOT include text in the image.
-    11. Image Alt Text: Also write a short, literal English description of that same image containing the Focus Keyword (for Google Image SEO).
-    12. Category: Determine the ONE best category from this exact list: Mythology, Vedic Wisdom, Daily Sadhana, Festivals & Vrat, Astrology & Horoscope, Temples & Pilgrimage, Mantras & Chants, Spiritual News.
-    13. Ecommerce Category: Choose ONE from: "shiva", "pooja", "gita", "general" — based on the article topic.
+    5. Formatting: Use proper HTML headings (<h2>) like "Significance", "Mythology". Use short paragraphs, bold important names/facts, and include at least one bulleted list.
+    6. BILINGUAL WHATSAPP OPTIMIZATION: At the very top of your HTML Content, before the English text, you MUST write a 2-3 sentence highly engaging Hindi summary titled '<h3>हिंदी सारांश:</h3>'.
+    7. Category: Choose ONE category from this exact list: Festivals & Vrat, Temples & Pilgrimage, Astrology & Horoscope, Vedic Wisdom, Gita Wisdom, Panchang, Mantras & Chants, Mythology, Spiritual News.
+    8. Ecommerce Tag: Choose ONE keyword from: "shiva", "pooja", "gita", "general".
+    9. Visual AI Image Prompt: Write a detailed, concrete visual description in English for Google Imagen 3 API (e.g., "Photorealistic painting of Lord Shiva meditating at Kashi Vishwanath temple during sunrise, glowing oil diyas, divine golden aura, 8k resolution"). Do NOT put text in this image prompt.
+    10. Image Alt Text: Write a short, literal English description of that image.
+    11. Short Image Banner Text: Provide a SHORT 3-5 WORD visual headline for the image text banner (e.g. "KASHI VISHWANATH: SAWAN GUIDELINES" or "SURYA GRAHAN 2026: COSMIC WARNING"). DO NOT copy the full long article title!
+    12. SEO Meta: Provide "meta_title" (under 60 chars), "meta_description" (under 155 chars), and "focus_keyword" (2-4 word phrase).
 
-    Format the output EXACTLY like this:
-    Headline: [Your High-CTR Unique English Headline]
-    FocusKeyword: [2-4 word focus phrase]
-    Slug: [your-english-url-slug]
-    Category: [Just the category name, e.g. Temples & Pilgrimage]
-    EcommerceCategory: [shiva|pooja|gita|general]
-    ImagePrompt: [Literal visual English image generation prompt]
-    ImageAltText: [Short description of image containing FocusKeyword]
-    MetaTitle: [SEO title under 60 characters]
-    MetaDescription: [SEO description under 155 characters starting with FocusKeyword]
-    Content:
-    <h3>हिंदी सारांश:</h3><p>Your Hindi summary...</p><p>First paragraph with <strong>FocusKeyword</strong>...</p><h2>Your Heading</h2>
-    [Your HTML formatted content in English]
+    Format output EXACTLY as valid JSON:
+    {{
+        "headline": "Your English Headline Here",
+        "slug": "your-english-slug-here",
+        "category": "Temples & Pilgrimage",
+        "ecommerce_tag": "shiva",
+        "image_prompt": "Detailed concrete visual prompt for Imagen 3",
+        "image_alt_text": "Short literal alt description",
+        "image_banner_text": "SHORT 3-5 WORD BANNER TITLE",
+        "meta_title": "SEO title under 60 chars",
+        "meta_description": "SEO description under 155 chars",
+        "focus_keyword": "Focus keyword phrase",
+        "content": "<h3>हिंदी सारांश:</h3><p>Your Hindi summary...</p><h2>First Heading</h2><p>Article body...</p>"
+    }}
     """
 
     try:
@@ -257,35 +292,16 @@ def rewrite_article_and_image_prompt(original_title):
             contents=prompt
         )
         text = response.text
+        if text.startswith("```json"):
+            text = text[7:-3].strip()
+        elif text.startswith("```"):
+            text = text[3:-3].strip()
 
-        headline = text.split("Headline:")[1].split("FocusKeyword:")[0].strip()
-        focus_keyword = text.split("FocusKeyword:")[1].split("Slug:")[0].strip()
-        slug = text.split("Slug:")[1].split("Category:")[0].strip()
-        category = text.split("Category:")[1].split("EcommerceCategory:")[0].strip()
-        ecommerce_category = text.split("EcommerceCategory:")[1].split("ImagePrompt:")[0].strip()
-        image_prompt = text.split("ImagePrompt:")[1].split("ImageAltText:")[0].strip()
-        image_alt_text = text.split("ImageAltText:")[1].split("MetaTitle:")[0].strip()
-        meta_title = text.split("MetaTitle:")[1].split("MetaDescription:")[0].strip()
-        meta_description = text.split("MetaDescription:")[1].split("Content:")[0].strip()
-        content = text.split("Content:")[1].strip()
-
-        if content.startswith("```html"):
-            content = content[7:-3].strip()
-
-        return {
-            "headline": headline,
-            "focus_keyword": focus_keyword,
-            "slug": slug,
-            "category": category,
-            "ecommerce_category": ecommerce_category,
-            "image_prompt": image_prompt,
-            "image_alt_text": image_alt_text,
-            "meta_title": meta_title,
-            "meta_description": meta_description,
-            "content": content
-        }
+        data = json.loads(text)
+        data['category'] = clean_category_name(data.get('category'))
+        return data
     except Exception as e:
-        print(f"Failed to generate AI response: {e}")
+        print(f"Failed to generate AI article response: {e}")
         return None
 
 
@@ -316,66 +332,52 @@ def get_cross_platform_fonts(size_title=34, size_badge=18):
     return font_title, font_badge
 
 
-def generate_ai_image(prompt, topic_keyword="indian temple", filename="featured_image.webp"):
-    print(f"Phase 4: Sourcing Real Authentic HD Photo or Smart AI Image... ({topic_keyword})")
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+def generate_ai_image(prompt, banner_text="", category_text="Spiritual News", filename="featured_image.webp"):
+    print(f"Phase 4: Generating 100% Relevant Artwork via Google Imagen 3 API... ({banner_text})")
     temp_jpg = "temp_bg.jpg"
     seed = random.randint(1, 999999)
 
-    # Tier 1: Try Sourcing Real Authentic HD Photography by Topic Keyword
-    clean_kw = topic_keyword.lower()
-    if any(k in clean_kw for k in ["shiva", "mahakal", "bhasma", "jyotirlinga", "sawan", "kashi", "vishwanath"]):
-        unsplash_url = "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=1200&h=630&fit=crop"
-    elif any(k in clean_kw for k in ["eclipse", "grahan", "surya"]):
-        unsplash_url = "https://images.unsplash.com/photo-1532693322450-2cb5c511067d?w=1200&h=630&fit=crop"
-    elif any(k in clean_kw for k in ["teej", "hariyali", "festivals", "vrat", "rakhi", "diwali", "pooja", "puja"]):
-        unsplash_url = "https://images.unsplash.com/photo-1605371924599-2d0365da1ae0?w=1200&h=630&fit=crop"
-    else:
-        unsplash_url = "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=1200&h=630&fit=crop"
-
+    # Tier 1: Primary Engine - Google Imagen 3 API (`imagen-3.0-generate-002`)
     try:
-        res = requests.get(unsplash_url, headers=headers, timeout=8)
-        if res.status_code == 200 and len(res.content) > 5000:
+        res = client.models.generate_images(
+            model='imagen-3.0-generate-002',
+            prompt=f"Photorealistic 8k artwork of {prompt}, divine lighting, highly detailed, 35mm lens, masterpiece",
+            config=dict(
+                number_of_images=1,
+                output_mime_type='image/jpeg',
+                aspect_ratio='16:9'
+            )
+        )
+        if res and res.generated_images and len(res.generated_images[0].image.image_bytes) > 20000:
             with open(temp_jpg, "wb") as f:
-                f.write(res.content)
-            print(f"Successfully retrieved Real Authentic 4K Photography for '{topic_keyword}'!")
+                f.write(res.generated_images[0].image.image_bytes)
+            print("Successfully generated 100% relevant HD artwork via Google Imagen 3 API!")
             return temp_jpg
     except Exception as e:
-        print(f"Real photo engine notice ({e}), proceeding to AI engine...")
+        print(f"Google Imagen 3 API notice ({e}), failing over to Pollinations AI engine...")
 
-    # Tier 2: Smart Photorealistic AI Prompting
-    high_quality_prompt = f"Professional realistic photography of {prompt}, shot on 35mm lens, f/1.8, natural golden hour lighting, 8k resolution, National Geographic style, highly detailed, photorealistic"
-    encoded_prompt = urllib.parse.quote(high_quality_prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&seed={seed}"
+    # Tier 2: Secondary Engine - Pollinations AI with Concrete Visual Prompt + Dynamic Seed
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    encoded_prompt = urllib.parse.quote(f"Photorealistic 8k artwork of {prompt}, divine golden lighting, National Geographic style")
+    pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&seed={seed}"
 
     try:
-        response = requests.get(url, stream=True, headers=headers, timeout=12)
-        if response.status_code == 200 and len(response.content) > 5000:
+        response = requests.get(pollinations_url, stream=True, headers=headers, timeout=14)
+        if response.status_code == 200 and len(response.content) > 10000:
             with open(temp_jpg, 'wb') as f:
                 for chunk in response.iter_content(1024):
                     f.write(chunk)
-            print("Successfully generated fresh photorealistic AI background image!")
+            print("Successfully generated fresh photorealistic AI background image via Pollinations engine!")
             return temp_jpg
     except Exception as e:
-        print(f"Pollinations AI notice ({e}), using HD fallback background...")
-
-    # Tier 3: High-Res Fallback
-    try:
-        fallback_url = f"https://picsum.photos/seed/{seed}/1200/630"
-        res = requests.get(fallback_url, headers=headers, timeout=8)
-        if res.status_code == 200:
-            with open(temp_jpg, 'wb') as f:
-                f.write(res.content)
-            return temp_jpg
-    except Exception as e:
-        print(f"Fallback image error: {e}")
+        print(f"Pollinations AI backup notice ({e})")
 
     return None
 
 
 def compress_image(temp_filepath, output_filename="featured_image.webp", headline_text="", category_text="SPIRITUAL NEWS"):
     """
-    Overlays a high-CTR news thumbnail text banner at bottom,
+    Overlays a high-CTR news thumbnail text banner at bottom (260px height),
     insets logo.png at top-right, applies UnsharpMask sharpening filter for HD crispness,
     and compresses to ultra-fast WebP format (25-45 KB).
     """
@@ -383,12 +385,12 @@ def compress_image(temp_filepath, output_filename="featured_image.webp", headlin
         img = Image.open(temp_filepath).convert("RGBA")
         width, height = img.size
 
-        # 1. Dark Gradient Banner at bottom
+        # 1. Extended Dark Gradient Banner at bottom (260px height for breathing room)
         overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         draw_ov = ImageDraw.Draw(overlay)
-        banner_height = 220
+        banner_height = 260
         for y in range(height - banner_height, height):
-            alpha = int(220 * ((y - (height - banner_height)) / banner_height))
+            alpha = int(230 * ((y - (height - banner_height)) / banner_height))
             draw_ov.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
         img = Image.alpha_composite(img, overlay)
 
@@ -407,16 +409,16 @@ def compress_image(temp_filepath, output_filename="featured_image.webp", headlin
             badge_w, badge_h = 160, 32
 
         badge_x1 = 38
-        badge_y1 = height - 165
+        badge_y1 = height - 190
         badge_x2 = badge_x1 + badge_w
         badge_y2 = badge_y1 + badge_h
 
         draw.rounded_rectangle([badge_x1, badge_y1, badge_x2, badge_y2], radius=6, fill=(232, 84, 10, 240))
         draw.text((badge_x1 + 12, badge_y1 + 5), badge_text, font=font_badge, fill=(255, 255, 255))
 
-        # 4. Main Title Overlay
-        clean_title = headline_text.upper()[:52]
-        draw.text((38, height - 105), clean_title, font=font_title, fill=(255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0))
+        # 4. Short Visual Banner Title Overlay (Max 45 chars, smart 3-5 word heading)
+        clean_title = headline_text.upper()[:45]
+        draw.text((38, height - 120), clean_title, font=font_title, fill=(255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0))
 
         # 5. Inset Top-Right Logo Badge
         logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
@@ -467,17 +469,18 @@ def compress_image(temp_filepath, output_filename="featured_image.webp", headlin
 
 
 def get_or_create_category(category_name):
+    clean_name = clean_category_name(category_name)
     categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
 
-    response = requests.get(categories_url, params={"search": category_name}, auth=auth)
+    response = requests.get(categories_url, params={"search": clean_name}, auth=auth)
     if response.status_code == 200:
         categories = response.json()
         for cat in categories:
-            if cat['name'].lower() == category_name.lower():
+            if cat['name'].lower() == clean_name.lower():
                 return cat['id']
 
-    post_data = {"name": category_name}
+    post_data = {"name": clean_name}
     response = requests.post(categories_url, json=post_data, auth=auth)
     if response.status_code == 201:
         return response.json()['id']
@@ -520,30 +523,27 @@ def publish_wp_post(data, media_id, category_id, slug, meta_title, meta_descript
     post_url = f"{WP_URL}/wp-json/wp/v2/posts"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
 
-    # Inject eBook upsell after 3rd paragraph
+    # Inject eBook upsell mid-article (after 3rd paragraph)
     paragraphs = data['content'].split('</p>')
     if len(paragraphs) > 3:
         paragraphs.insert(3, get_ebook_upsell_html())
     mid_content = '</p>'.join(paragraphs)
 
-    # Inject WhatsApp CTA at mid-point
+    # Inject WhatsApp CTA after mid-point
     paragraphs2 = mid_content.split('</p>')
     if len(paragraphs2) > 5:
         mid_idx = len(paragraphs2) // 2
         paragraphs2.insert(mid_idx, get_whatsapp_cta_html())
     full_content = '</p>'.join(paragraphs2)
 
-    # Append end CTAs
+    # Append Kundli upsell + Affiliate at the end
     full_content += get_kundli_upsell_html()
-    full_content += get_affiliate_html(data.get('ecommerce_category', 'general'))
-
-    ist_now = datetime.now(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%dT%H:%M:%S')
+    full_content += get_affiliate_html(data.get('ecommerce_tag', 'general'))
 
     payload = {
         "title": data['headline'],
         "content": full_content,
         "status": "publish",
-        "date": ist_now,
         "slug": slug,
         "categories": [category_id] if category_id else [],
         "meta": {
@@ -597,19 +597,22 @@ def main():
             mark_as_posted(news['link'])
             continue
 
+        clean_cat = clean_category_name(rewritten.get('category'))
+
         print(f"Final Headline: {rewritten['headline']}")
-        print(f"AI Category: {rewritten['category']}")
+        print(f"Clean Category: {clean_cat}")
         print(f"Focus Keyword: {rewritten.get('focus_keyword', 'N/A')}")
 
-        temp_image = generate_ai_image(rewritten['image_prompt'], topic_keyword=rewritten.get('focus_keyword', rewritten['category']))
+        banner_heading = rewritten.get('image_banner_text', rewritten['headline'][:45])
+        temp_image = generate_ai_image(rewritten['image_prompt'], banner_text=banner_heading, category_text=clean_cat)
         media_id = None
         final_image = None
         if temp_image:
             output_webp = f"{rewritten['slug']}.webp"
-            final_image = compress_image(temp_image, output_filename=output_webp, headline_text=rewritten['headline'], category_text=rewritten['category'])
+            final_image = compress_image(temp_image, output_filename=output_webp, headline_text=banner_heading, category_text=clean_cat)
             media_id = upload_image_to_wp(final_image, alt_text=rewritten.get('image_alt_text', rewritten['headline']))
 
-        category_id = get_or_create_category(rewritten['category'])
+        category_id = get_or_create_category(clean_cat)
 
         publish_wp_post(
             rewritten,
