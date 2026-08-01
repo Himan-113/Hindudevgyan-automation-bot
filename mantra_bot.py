@@ -170,8 +170,8 @@ def generate_new_mantra(target_day, existing_sanskrit_openers):
 
     Format EXACTLY as valid JSON, no markdown, no extra text:
     {{
-        "title_en": "Short English Title",
-        "title_hi": "संक्षिप्त हिंदी शीर्षक",
+        "title_en": "Specific Name of Mantra (e.g. 'Surya Beej Mantra', 'Aditya Hrudayam Stotram'). NEVER use generic day titles like 'Sunday Surya Mantra'!",
+        "title_hi": "मंत्र का विशिष्ट नाम (जैसे 'सूर्य बीज मंत्र')",
         "focus_keyword": "Focus Keyword Here",
         "headline": "Magnetic High-CTR Headline",
         "slug": "url-slug-here",
