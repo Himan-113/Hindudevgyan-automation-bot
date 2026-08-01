@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import random
 import urllib.parse
 from google import genai
 from dotenv import load_dotenv

@@ -1,9 +1,11 @@
 import os
 import requests
 import json
+import random
 import re
 import urllib.parse
 from google import genai
+from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 import time
 from datetime import datetime
