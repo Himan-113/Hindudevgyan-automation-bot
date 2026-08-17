@@ -241,7 +241,7 @@ def generate_ai_image(prompt, topic_keyword="panchang", filename="panchang_image
     for attempt in range(2):
         seed = random.randint(1, 999999)
         encoded_prompt = urllib.parse.quote(f"Photorealistic 8k artwork of {prompt}, divine golden lighting, National Geographic style")
-        pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&seed={seed}"
+        pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=flux&width=1200&height=630&nologo=true&enhance=true&seed={seed}"
 
         try:
             response = requests.get(pollinations_url, stream=True, headers=headers, timeout=25)

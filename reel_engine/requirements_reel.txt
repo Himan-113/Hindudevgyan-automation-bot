@@ -1,0 +1,16 @@
+# HinduDevGyan Reel Engine — Python Requirements
+# Install with: pip install -r requirements_reel.txt
+
+# Core (shared with existing bot)
+google-genai>=2.0.0
+Pillow>=10.0.0
+requests>=2.32.0
+python-dotenv>=1.0.0
+
+# Reel Engine (new)
+edge-tts>=6.1.0          # Free Microsoft Hindi TTS
+pytrends>=4.9.0          # Google Trends API wrapper
+
+# Optional: YouTube upload (Phase 2)
+# google-api-python-client>=2.0.0
+# google-auth-oauthlib>=1.0.0
