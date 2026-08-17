@@ -98,104 +98,86 @@ def apply_smart_logo_watermark(image_path, output_path=None):
         return image_path
 
 
-def fetch_real_temple_photo(query_text):
+def search_internet_for_real_photo(text):
     """
-    Searches official open media repositories (Wikipedia/Wikimedia) for authentic,
-    high-resolution photographs of famous Indian temples & pilgrimage sites.
+    Dynamically extracts key entities (persons, places, temples, real events)
+    from ANY title or prompt and searches open internet media (Wikipedia/Wikimedia) FIRST.
+    Returns local file path if a high-res real photo is found, else None.
     """
+    import re
+    boilerplate = {
+        'news', 'today', '2026', '2025', 'sacred', 'divine', 'cosmic', 'unlocks',
+        'revealed', 'begins', 'journey', 'final', 'phase', 'harness', 'power',
+        'confluence', 'honors', 'secret', 'secrets', 'exclusive', 'special', 'updates'
+    }
+    words = text.replace(':', ' ').replace('-', ' ').replace(',', ' ').replace("'", "").split()
+    candidates = []
+    
+    # 1. Capitalized multi-word entities (Persons, Places, Temples, Events)
+    entities = re.findall(r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)', text)
+    for ent in entities:
+        clean_ent = ' '.join([w for w in ent.split() if w.lower() not in boilerplate])
+        if clean_ent and clean_ent not in candidates:
+            candidates.append(clean_ent)
+            
+    # 2. Main title clean multi-word queries
+    clean_terms = [w for w in words if w.lower() not in boilerplate and len(w) > 3]
+    if len(clean_terms) >= 2:
+        candidates.append(' '.join(clean_terms[:3]))
+        
+    # 3. Individual significant capitalized names
+    for w in words:
+        if len(w) > 4 and w[0].isupper() and w.lower() not in boilerplate and w not in candidates:
+            candidates.append(w)
+            
     headers = {'User-Agent': 'HinduDevGyan/2.0 (info@hindudevgyan.in)'}
-    search_queries = [
-        f"{query_text} temple",
-        query_text
-    ]
-
-    for q in search_queries:
+    for q in candidates:
         try:
             url = f"https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch={urllib.parse.quote(q)}&gsrlimit=3&prop=pageimages&pithumbsize=1280&format=json"
-            res = requests.get(url, headers=headers, timeout=12)
+            res = requests.get(url, headers=headers, timeout=10)
             if res.status_code == 200:
                 pages = res.json().get("query", {}).get("pages", {})
                 for pid, p in sorted(pages.items(), key=lambda x: x[1].get('index', 99)):
                     if "thumbnail" in p and "source" in p["thumbnail"]:
                         img_url = p["thumbnail"]["source"]
-                        img_data = requests.get(img_url, headers=headers, timeout=20).content
+                        img_data = requests.get(img_url, headers=headers, timeout=15).content
                         if len(img_data) > 20000:
-                            temp_file = "temp_real_temple.jpg"
+                            temp_file = "temp_real_media.jpg"
                             with open(temp_file, "wb") as f:
                                 f.write(img_data)
-                            print(f"[OK] Fetched authentic real photo for '{p.get('title')}' from official repository")
+                            print(f"[OK] Found authentic real photo for '{q}' ({p.get('title')}) from internet repository")
                             return temp_file
-        except Exception as e:
-            print(f"Photo search attempt error: {e}")
+        except Exception:
             continue
-
     return None
 
 
 def generate_hd_featured_image(prompt_text, category="Spiritual News", output_filename="featured_image.webp", temple_keyword=""):
     """
-    Smart Hybrid Visual Engine:
-    1. If article is about a real physical temple (Kedarnath, Badrinath, Somnath, etc.),
-       fetches the authentic real high-res photograph.
-    2. Otherwise, generates 8K photorealistic Vedic artwork via Cloudflare FLUX.1.
-    3. Applies snug HinduDevGyan logo watermark and converts to WebP.
+    Enterprise Internet-First Visual Pipeline:
+    1. Searches the internet FIRST for any real person, landmark, temple, or event in the text.
+    2. If a real high-res photograph is found -> Applies watermark and returns it.
+    3. If not found (or pure mythology / astrology / mantra) -> Generates via FLUX.1 with topic-tailored prompts.
+    4. Applies snug HinduDevGyan logo watermark and converts to WebP.
     """
     print(f"\n[Image Engine] Processing Visual for: '{prompt_text[:60]}...'")
     temp_raw = "temp_raw_gen.jpg"
 
-    # Step 1: Check for real physical temple photo if applicable
-    search_terms = []
-    if temple_keyword:
-        search_terms.append(temple_keyword)
+    # ─── STEP 1: SEARCH OPEN INTERNET MEDIA FIRST ───
+    real_photo = search_internet_for_real_photo(prompt_text)
+    if real_photo and os.path.exists(real_photo):
+        watermarked = apply_smart_logo_watermark(real_photo, output_filename)
+        if real_photo != output_filename:
+            try: os.remove(real_photo)
+            except Exception: pass
+        return watermarked
 
-    # Detect famous physical temples and sacred geographic landmarks
-    famous_temples = [
-        "Amarnath", "Kedarnath", "Badrinath", "Kashi Vishwanath", "Mahakaleshwar", "Somnath",
-        "Ayodhya", "Ram Mandir", "Tirupati", "Puri Jagannath", "Rameshwaram", "Vaishno Devi",
-        "Banke Bihari", "Vrindavan", "Mathura", "Meenakshi", "Brihadisvara", "Kamakhya",
-        "Dwarkadhish", "Trimbakeshwar", "Bhimashankar", "Omkareshwar", "Grishneshwar",
-        "Mallikarjuna", "Nageshwar", "Baidyanath", "Varanasi", "Haridwar", "Rishikesh",
-        "Gangotri", "Yamunotri", "Siddhivinayak", "Akshardham", "Belur Math"
-    ]
-    for temple in famous_temples:
-        if temple.lower() in prompt_text.lower() and temple not in search_terms:
-            search_terms.append(temple)
-
-    # Step 1: If real physical temple/place is identified, fetch authentic real photograph
-    for term in search_terms:
-        real_photo = fetch_real_temple_photo(term)
-        if real_photo:
-            watermarked = apply_smart_logo_watermark(real_photo, output_filename)
-            if os.path.exists(real_photo) and real_photo != output_filename:
-                try: os.remove(real_photo)
-                except Exception: pass
-            return watermarked
-
-    # Step 2: DYNAMIC FLUX.1 Prompt Generation (Varying composition by topic category)
-    cat_lower = str(category).lower()
-    if any(k in cat_lower for k in ["panchang", "astrology", "horoscope", "nakshatra"]):
-        refined_prompt = (
-            f"Cinematic 8k authentic Vedic astrology photography of {prompt_text}, "
-            f"ancient Sanskrit palm-leaf manuscript, brass astrological yantra, "
-            f"serene night sky with glowing crescent moon and stars, soft sacred lighting, Hasselblad 8k"
-        )
-    elif any(k in cat_lower for k in ["festival", "vrat", "celebration"]):
-        refined_prompt = (
-            f"Vibrant cinematic 8k Indian festival photography of {prompt_text}, "
-            f"joyful celebration atmosphere, fresh marigold and lotus flower decorations, "
-            f"traditional brass puja thali, glowing earthen diyas, Hasselblad 8k"
-        )
-    elif any(k in cat_lower for k in ["gita", "wisdom", "philosophy"]):
-        refined_prompt = (
-            f"Cinematic 8k spiritual Vedic photography of {prompt_text}, "
-            f"serene Himalayan meditative atmosphere, soft divine light rays, sacred ancient setting, masterpiece"
-        )
-    else:
-        refined_prompt = (
-            f"Cinematic 8k photorealistic devotional photography of {prompt_text}, "
-            f"sacred Indian spiritual atmosphere, warm volumetric golden lighting, "
-            f"authentic traditional iconography, sharp focus, 35mm photograph"
-        )
+    # ─── STEP 2: DYNAMIC FLUX.1 GENERATION (NATURAL AI RENDERING) ───
+    # Passes Gemini's context-aware visual prompt directly with photorealistic quality anchors
+    refined_prompt = (
+        f"Cinematic 8k photorealistic photography of {prompt_text}, "
+        f"warm sacred lighting, realistic textures, high detail, Hasselblad 8k masterpiece"
+    )
 
     # ─── TIER 1: CLOUDFLARE WORKERS AI (FLUX.1-schnell) ───
     if CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN:
