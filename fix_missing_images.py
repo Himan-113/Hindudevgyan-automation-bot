@@ -8,12 +8,13 @@ from google import genai
 
 # Load environment variables
 load_dotenv()
+load_dotenv('reel_engine/.env')
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-WP_URL = os.getenv("WP_URL")
+WP_URL = os.getenv("WP_URL", "https://hindudevgyan.in")
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 
 def safe_generate_content(prompt):
@@ -65,12 +66,12 @@ def generate_image_prompt(headline):
     Return ONLY the prompt string, nothing else.
     """
     res = safe_generate_content(prompt)
-    return res.strip() if res else None
+    return res.strip() if res else headline
 
 def generate_ai_image(prompt, filename="temp_fix_image.jpg"):
     print(f"  -> Generating image for prompt: {prompt[:50]}...")
     encoded_prompt = urllib.parse.quote(prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true"
+    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=flux&width=1200&height=630&nologo=true"
     
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
