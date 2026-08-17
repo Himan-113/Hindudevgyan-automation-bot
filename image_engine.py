@@ -151,18 +151,20 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
     if temple_keyword:
         search_terms.append(temple_keyword)
 
-    # Detect famous temples from prompt text
+    # Detect famous physical temples and sacred geographic landmarks
     famous_temples = [
-        "Kedarnath", "Badrinath", "Kashi Vishwanath", "Mahakaleshwar", "Somnath",
-        "Ayodhya Ram Mandir", "Tirupati Balaji", "Puri Jagannath", "Rameshwaram",
-        "Vaishno Devi", "Banke Bihari", "Meenakshi", "Brihadisvara", "Kamakhya",
+        "Amarnath", "Kedarnath", "Badrinath", "Kashi Vishwanath", "Mahakaleshwar", "Somnath",
+        "Ayodhya", "Ram Mandir", "Tirupati", "Puri Jagannath", "Rameshwaram", "Vaishno Devi",
+        "Banke Bihari", "Vrindavan", "Mathura", "Meenakshi", "Brihadisvara", "Kamakhya",
         "Dwarkadhish", "Trimbakeshwar", "Bhimashankar", "Omkareshwar", "Grishneshwar",
-        "Mallikarjuna", "Nageshwar", "Baidyanath", "Varanasi Ghats", "Haridwar"
+        "Mallikarjuna", "Nageshwar", "Baidyanath", "Varanasi", "Haridwar", "Rishikesh",
+        "Gangotri", "Yamunotri", "Siddhivinayak", "Akshardham", "Belur Math"
     ]
     for temple in famous_temples:
         if temple.lower() in prompt_text.lower() and temple not in search_terms:
             search_terms.append(temple)
 
+    # Step 1: If real physical temple/place is identified, fetch authentic real photograph
     for term in search_terms:
         real_photo = fetch_real_temple_photo(term)
         if real_photo:
@@ -172,12 +174,31 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
                 except Exception: pass
             return watermarked
 
-    # Step 2: Generate 8K Photorealistic Artwork via FLUX.1
-    refined_prompt = (
-        f"Heroic centered cinematic 8k devotional photography of {prompt_text}, "
-        f"sacred Indian Vedic temple sanctum garbhagriha atmosphere, warm golden hour lighting, "
-        f"glowing brass oil diyas, intricate stone temple carvings, authentic sacred iconography, Hasselblad masterpiece"
-    )
+    # Step 2: DYNAMIC FLUX.1 Prompt Generation (Varying composition by topic category)
+    cat_lower = str(category).lower()
+    if any(k in cat_lower for k in ["panchang", "astrology", "horoscope", "nakshatra"]):
+        refined_prompt = (
+            f"Cinematic 8k authentic Vedic astrology photography of {prompt_text}, "
+            f"ancient Sanskrit palm-leaf manuscript, brass astrological yantra, "
+            f"serene night sky with glowing crescent moon and stars, soft sacred lighting, Hasselblad 8k"
+        )
+    elif any(k in cat_lower for k in ["festival", "vrat", "celebration"]):
+        refined_prompt = (
+            f"Vibrant cinematic 8k Indian festival photography of {prompt_text}, "
+            f"joyful celebration atmosphere, fresh marigold and lotus flower decorations, "
+            f"traditional brass puja thali, glowing earthen diyas, Hasselblad 8k"
+        )
+    elif any(k in cat_lower for k in ["gita", "wisdom", "philosophy"]):
+        refined_prompt = (
+            f"Cinematic 8k spiritual Vedic photography of {prompt_text}, "
+            f"serene Himalayan meditative atmosphere, soft divine light rays, sacred ancient setting, masterpiece"
+        )
+    else:
+        refined_prompt = (
+            f"Cinematic 8k photorealistic devotional photography of {prompt_text}, "
+            f"sacred Indian spiritual atmosphere, warm volumetric golden lighting, "
+            f"authentic traditional iconography, sharp focus, 35mm photograph"
+        )
 
     # ─── TIER 1: CLOUDFLARE WORKERS AI (FLUX.1-schnell) ───
     if CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN:

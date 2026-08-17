@@ -292,10 +292,13 @@ def rewrite_article_and_image_prompt(original_title):
     You are an elite Hindu Religious Scholar, Vedic Astrologer, and SEO Editor-in-Chief. Write a deeply engaging, authoritative, and SEO-optimized article in ENGLISH based on this Hindi news/topic:
     "{original_title}"
 
-    CRITICAL EDITORIAL REQUIREMENTS:
+    CRITICAL EDITORIAL & SEO REQUIREMENTS:
     1. Language: Premium, engaging English.
-    2. Headline (H1): High-CTR, creative, spiritual English headline (100% Unique).
-    3. URL Slug: Clean 4-6 word hyphenated slug (e.g. significance-of-kashi-vishwanath-sawan).
+    2. Headline (H1) Formula: High-Search Intent + Trending Hook.
+       - Structure: `[Deity/Festival/Rashi Name 2026]: [High-Search Intent - Muhurat / Vidhi / Predictions / Spiritual Meaning]`
+       - Examples of GOOD titles: "Sawan Somwar & Nag Panchami 2026: Auspicious Shubh Muhurat, Puja Vidhi & Shiva Mantras", "Aquarius Weekly Horoscope (Aug 17–22, 2026): Kumbh Rashi Career Shifts & Shani Remedies", "Amarnath Yatra 2026: Chhari Mubarak Dates, Holy Cave Timings & Weather Guide".
+       - BANNED ABSTRACT WORDS: NEVER use words like "Alchemy", "Triumph", "Crossroads", "Tapestry", "Symphony", "Delve". Keep titles clear, powerful, and directly matching what people search on Google & Discover.
+    3. URL Slug: Clean 4-6 word hyphenated slug (e.g. sawan-somwar-nag-panchami-muhurat-vidhi).
     4. Internal Linking: Naturally embed at least 3 internal HTML links:
        - Kundli / Horoscope -> <a href="https://hindudevgyan.in/free-kundli/">
        - Vastu -> <a href="https://hindudevgyan.in/category/vastu/">
@@ -310,9 +313,13 @@ def rewrite_article_and_image_prompt(original_title):
        - <h2>Frequently Asked Questions</h2>: 3 crisp Q&A pairs (<h3> and <p>) optimized for Google FAQ Rich Snippets.
     6. Category: Choose ONE from: Festivals & Vrat, Temples & Pilgrimage, Astrology & Horoscope, Vedic Wisdom, Gita Wisdom, Panchang, Mantras & Chants, Mythology, Spiritual News.
     7. Ecommerce Tag: Choose ONE: "shiva", "pooja", "gita", "general".
-    8. Visual AI Image Prompt: A concrete, literal 20-30 word visual scene description for FLUX.1 focusing on a HEROIC CENTERED PORTRAIT or SANCTUM SANCTORUM of the primary deity or sacred ritual altar (e.g., "Majestic Lord Shiva seated in deep meditation inside an ancient stone temple sanctum with glowing brass oil diyas, sacred trishul, and holy incense smoke"). NEVER describe distant crowds or tiny figurines; always focus directly on the majestic central deity or sacred altar.
-    9. Image Alt Text: Short descriptive alt text containing primary subject.
-    10. Short Image Banner Text: 3-5 word concise headline for image reference.
+    8. Visual AI Image Prompt: A concrete 20-30 word visual scene description for FLUX.1.
+       - Identify the EXACT SACRED ENTITY (Lord Shiva, Lord Krishna, Lord Rama, Hanuman, Ganesha, Maa Durga, Nag Devta, Shani Dev, or sacred Shivling).
+       - If Horoscope: depict the Vedic deity of that sign (e.g., Shani Dev / sacred Kalash for Kumbh/Aquarius; Surya Dev for Leo/Simha) with cosmic golden aura and stars.
+       - If Nag Panchami: depict the sacred Vasuki/Sheshnag serpent crowned around Lord Shiva with Trishul and bilva leaves.
+       - ALWAYS focus on a HEROIC CENTERED PORTRAIT or SANCTUM SANCTORUM with glowing brass oil diyas, temple pillars, and warm golden lighting. NEVER describe abstract concepts (like trophies, alchemy, or modern crowds).
+    9. Image Alt Text: Short descriptive alt text containing primary subject (e.g. "Lord Shiva and Nag Devta in Sawan Somwar puja").
+    10. Short Image Banner Text: 3-5 word concise headline.
     11. SEO Meta: "meta_title" (<60 chars), "meta_description" (<155 chars), and "focus_keyword".
 
     Format output EXACTLY as valid JSON:
