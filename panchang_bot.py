@@ -20,7 +20,7 @@ WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 PROKERALA_CLIENT_ID = os.getenv("PROKERALA_CLIENT_ID")
 PROKERALA_CLIENT_SECRET = os.getenv("PROKERALA_CLIENT_SECRET")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 
 def safe_generate_content(prompt):
@@ -227,6 +227,12 @@ def generate_panchang_article(astro_data):
     elif text.startswith("```"): text = text[3:-3].strip()
 
     try:
+        return json.loads(text)
+    except Exception as e:
+        print(f"Failed to parse AI article JSON: {e}")
+        return None
+
+
 def generate_ai_image(prompt, topic_keyword="panchang", filename="panchang_image.webp"):
     """
     Calls centralized image_engine with Cloudflare FLUX.1 [schnell] & tight watermark badge.
@@ -240,10 +246,7 @@ def compress_image(temp_filepath, output_filename="panchang_image.webp", headlin
     Applies smart watermark if not already applied.
     """
     from image_engine import apply_smart_logo_watermark
-    return apply_smart_logo_watermark(temp_filepath, output_filename)_filename
-    except Exception as e:
-        print(f"Could not process image (continuing with original): {e}")
-        return temp_filepath
+    return apply_smart_logo_watermark(temp_filepath, output_filename)
 
 
 def upload_image_to_wp(image_path, alt_text=""):

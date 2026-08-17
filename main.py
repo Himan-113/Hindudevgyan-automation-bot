@@ -310,7 +310,7 @@ def rewrite_article_and_image_prompt(original_title):
        - <h2>Frequently Asked Questions</h2>: 3 crisp Q&A pairs (<h3> and <p>) optimized for Google FAQ Rich Snippets.
     6. Category: Choose ONE from: Festivals & Vrat, Temples & Pilgrimage, Astrology & Horoscope, Vedic Wisdom, Gita Wisdom, Panchang, Mantras & Chants, Mythology, Spiritual News.
     7. Ecommerce Tag: Choose ONE: "shiva", "pooja", "gita", "general".
-    8. Visual AI Image Prompt: A concrete, literal 20-30 word visual scene description for FLUX.1 (e.g., "Lord Shiva seated in meditation at Kashi Vishwanath temple sanctum with glowing brass oil lamps, fresh bilva patra offerings, holy incense smoke"). Do NOT include text.
+    8. Visual AI Image Prompt: A concrete, literal 20-30 word visual scene description for FLUX.1 focusing on a HEROIC CENTERED PORTRAIT or SANCTUM SANCTORUM of the primary deity or sacred ritual altar (e.g., "Majestic Lord Shiva seated in deep meditation inside an ancient stone temple sanctum with glowing brass oil diyas, sacred trishul, and holy incense smoke"). NEVER describe distant crowds or tiny figurines; always focus directly on the majestic central deity or sacred altar.
     9. Image Alt Text: Short descriptive alt text containing primary subject.
     10. Short Image Banner Text: 3-5 word concise headline for image reference.
     11. SEO Meta: "meta_title" (<60 chars), "meta_description" (<155 chars), and "focus_keyword".

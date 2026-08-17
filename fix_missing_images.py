@@ -51,16 +51,25 @@ def safe_generate_content(prompt):
     return None
 
 
-def generate_high_quality_image_prompt(headline):
+def generate_high_quality_image_prompt(headline, article_text=""):
+    # Strip HTML and truncate to first 600 chars of context
+    clean_context = ""
+    if article_text:
+        import re
+        clean_context = re.sub(r'<[^>]+>', ' ', article_text)[:600].strip()
+
     prompt = f"""
     You are a Master AI Art Director specializing in hyper-realistic, 8k National Geographic style photography and cinematic Vedic art.
     Article Headline: "{headline}"
+    Article Context & Ritual Details:
+    "{clean_context}"
 
-    Task: Write a photorealistic, cinematic visual scene description in English for an AI image generator (FLUX).
+    Task: Read the headline AND article context to understand the exact deity, temple, and ritual described. Then write a photorealistic, cinematic visual scene description in English for an AI image generator (FLUX).
     Rules:
-    - Describe concrete physical subjects, authentic Indian architecture, temple stone carving, marble altars, brass lamps, or celestial cosmos.
-    - Mention exact camera angle, natural golden hour lighting, depth of field, rich vibrant colors, 8k masterpiece.
-    - NEVER use anime, cartoon, 3D render, CGI, fantasy illustration, or abstract jargon.
+    - Focus on a HEROIC CENTERED PORTRAIT or TEMPLE SANCTUM SANCTORUM of the exact primary deity or sacred ritual altar described (e.g. Lord Shiva in meditation, Shiva Lingam abhishekam, Goddess Lakshmi, Lord Ganesha, etc.).
+    - Incorporate specific elements from the article (e.g., holy ash, brass trishul, clay diyas, marigold garlands, sacred incense smoke).
+    - Authentic Indian stone temple architecture, dramatic golden hour lighting, depth of field, 8k masterpiece.
+    - NEVER describe distant crowds, background people, or miniature figurines.
     - NEVER include text, watermark, or words.
     - Keep it under 35 words.
 
@@ -70,7 +79,7 @@ def generate_high_quality_image_prompt(headline):
     if res:
         clean = res.strip().replace('"', '').replace('\n', ' ')
         return clean
-    return f"Photorealistic 8k cinematic photography of {headline[:60]}, divine golden lighting, 35mm lens, National Geographic"
+    return f"Heroic centered portrait of sacred deity in ancient stone temple sanctum, glowing brass diyas, golden lighting"
 
 
 def generate_ai_image(prompt, filename="temp_hq_image.jpg"):
@@ -188,10 +197,9 @@ def enhance_and_fix_posts():
             if terms and len(terms) > 0 and len(terms[0]) > 0:
                 category_name = terms[0][0].get('name', 'SPIRITUAL WISDOM')
 
-        print(f"[{idx}/{len(work_queue)}] [{task_type}] Processing #{post_id}: {headline}")
-
-        # 1. Generate High Quality FLUX Prompt
-        hq_prompt = generate_high_quality_image_prompt(headline)
+        # 1. Generate High Quality Context-Aware FLUX Prompt from Title + Article Body
+        post_content = post.get('content', {}).get('rendered', '')
+        hq_prompt = generate_high_quality_image_prompt(headline, article_text=post_content)
         
         # 2. Generate 8K Artwork (Fal.ai FLUX -> Pollinations Fallback)
         temp_file = f"temp_{slug}.jpg"

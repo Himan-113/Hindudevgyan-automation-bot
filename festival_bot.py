@@ -18,7 +18,7 @@ WP_URL = os.getenv("WP_URL")
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
 
 def safe_generate_content(prompt):
@@ -156,7 +156,7 @@ def generate_weekly_festivals():
        - Mentions of Panchang/Muhurat -> <a href="https://hindudevgyan.in/category/panchang/">
        - Mentions of Bhagavad Gita/Karma -> <a href="https://hindudevgyan.in/category/gita-wisdom/">
     7. BILINGUAL: At the very top of content_html write a Hindi summary titled '<h3>हिंदी सारांश:</h3>'.
-    8. AI Image Prompt: Write a 100% LITERAL visual scene description in ENGLISH of the physical scene for a photorealistic featured image. Describe concrete physical objects (e.g. "A traditional Indian temple altar decorated with fresh orange marigold garlands, burning brass diya lamps, and sacred festival puja thali, 8k realistic photography, National Geographic style"). CRITICAL: NEVER use abstract terms, anime, or Hindi words in the prompt. Describe real physical objects so the AI renders an authentic photo. Do NOT include text.
+    8. AI Image Prompt: Write a 100% LITERAL visual scene description in ENGLISH focusing on a HEROIC CENTERED PORTRAIT or SANCTUM SANCTORUM of the deity/festival altar (e.g., "Majestic deity idol seated on a sacred temple altar decorated with fresh orange marigold garlands, burning brass diya lamps, and sacred festival puja thali, 8k realistic photography"). CRITICAL: NEVER describe distant crowds or tiny figurines. Always focus directly on the central deity or sacred puja altar. Do NOT include text.
     9. Image Alt Text: A short literal description of that image containing the Focus Keyword (for Image SEO).
     10. SEO META:
         - meta_title: Under 60 characters, keyword-front-loaded.

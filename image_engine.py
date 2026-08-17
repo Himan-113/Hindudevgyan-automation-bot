@@ -98,19 +98,85 @@ def apply_smart_logo_watermark(image_path, output_path=None):
         return image_path
 
 
-def generate_hd_featured_image(prompt_text, category="Spiritual News", output_filename="featured_image.webp"):
+def fetch_real_temple_photo(query_text):
     """
-    Generates an 8K photorealistic Vedic/devotional image using Cloudflare FLUX.1 [schnell]
-    with failover chains and watermarking.
+    Searches official open media repositories (Wikipedia/Wikimedia) for authentic,
+    high-resolution photographs of famous Indian temples & pilgrimage sites.
     """
-    print(f"\n[Image Engine] Generating 8K FLUX.1 Artwork for: '{prompt_text[:60]}...'")
+    # Clean temple query
+    clean_query = query_text.replace(" ", "_").strip()
+    candidate_titles = [
+        f"{clean_query}_Temple",
+        f"{clean_query}_Mandir",
+        clean_query
+    ]
+
+    headers = {'User-Agent': 'HinduDevGyan/2.0 (info@hindudevgyan.in)'}
+
+    for title in candidate_titles:
+        try:
+            url = f"https://en.wikipedia.org/w/api.php?action=query&titles={urllib.parse.quote(title)}&prop=pageimages&format=json&pithumbsize=1280"
+            res = requests.get(url, headers=headers, timeout=12)
+            if res.status_code == 200:
+                pages = res.json().get("query", {}).get("pages", {})
+                for pid, p in pages.items():
+                    if "thumbnail" in p and "source" in p["thumbnail"]:
+                        img_url = p["thumbnail"]["source"]
+                        img_data = requests.get(img_url, headers=headers, timeout=20).content
+                        if len(img_data) > 20000:
+                            temp_file = "temp_real_temple.jpg"
+                            with open(temp_file, "wb") as f:
+                                f.write(img_data)
+                            print(f"[OK] Fetched authentic real photo for '{title}' from official repository")
+                            return temp_file
+        except Exception:
+            continue
+
+    return None
+
+
+def generate_hd_featured_image(prompt_text, category="Spiritual News", output_filename="featured_image.webp", temple_keyword=""):
+    """
+    Smart Hybrid Visual Engine:
+    1. If article is about a real physical temple (Kedarnath, Badrinath, Somnath, etc.),
+       fetches the authentic real high-res photograph.
+    2. Otherwise, generates 8K photorealistic Vedic artwork via Cloudflare FLUX.1.
+    3. Applies snug HinduDevGyan logo watermark and converts to WebP.
+    """
+    print(f"\n[Image Engine] Processing Visual for: '{prompt_text[:60]}...'")
     temp_raw = "temp_raw_gen.jpg"
 
-    # Master prompt tuning for Indian Devotional & Vedic aesthetics
+    # Step 1: Check for real physical temple photo if applicable
+    search_terms = []
+    if temple_keyword:
+        search_terms.append(temple_keyword)
+
+    # Detect famous temples from prompt text
+    famous_temples = [
+        "Kedarnath", "Badrinath", "Kashi Vishwanath", "Mahakaleshwar", "Somnath",
+        "Ayodhya Ram Mandir", "Tirupati Balaji", "Puri Jagannath", "Rameshwaram",
+        "Vaishno Devi", "Banke Bihari", "Meenakshi", "Brihadisvara", "Kamakhya",
+        "Dwarkadhish", "Trimbakeshwar", "Bhimashankar", "Omkareshwar", "Grishneshwar",
+        "Mallikarjuna", "Nageshwar", "Baidyanath", "Varanasi Ghats", "Haridwar"
+    ]
+    for temple in famous_temples:
+        if temple.lower() in prompt_text.lower() and temple not in search_terms:
+            search_terms.append(temple)
+
+    for term in search_terms:
+        real_photo = fetch_real_temple_photo(term)
+        if real_photo:
+            watermarked = apply_smart_logo_watermark(real_photo, output_filename)
+            if os.path.exists(real_photo) and real_photo != output_filename:
+                try: os.remove(real_photo)
+                except Exception: pass
+            return watermarked
+
+    # Step 2: Generate 8K Photorealistic Artwork via FLUX.1
     refined_prompt = (
-        f"Cinematic 8k photorealistic devotional photography of {prompt_text}, "
-        f"sacred Indian Vedic atmosphere, warm golden hour lighting, glowing oil diyas, "
-        f"intricate temple carvings, photorealistic textures, Hasselblad camera masterpiece"
+        f"Heroic centered cinematic 8k devotional photography of {prompt_text}, "
+        f"sacred Indian Vedic temple sanctum garbhagriha atmosphere, warm golden hour lighting, "
+        f"glowing brass oil diyas, intricate stone temple carvings, authentic sacred iconography, Hasselblad masterpiece"
     )
 
     # ─── TIER 1: CLOUDFLARE WORKERS AI (FLUX.1-schnell) ───
