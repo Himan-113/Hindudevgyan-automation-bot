@@ -5,3 +5,4 @@ beautifulsoup4==4.12.3
 google-genai
 pytz
 Pillow==10.4.0
+numpy

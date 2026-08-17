@@ -5,7 +5,6 @@ import base64
 import random
 import urllib.parse
 from PIL import Image, ImageDraw, ImageFilter
-import numpy as np
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -21,18 +20,28 @@ LOGO_PATH = os.path.join(os.path.dirname(__file__), "logo.png")
 def _crop_logo_tight(logo_img):
     """
     Finds the exact non-white and non-transparent graphic bounds
-    to eliminate all excess top/bottom/side whitespace.
+    using pure Pillow (no numpy required).
     """
-    arr = np.array(logo_img)
-    alpha = arr[:, :, 3]
-    rgb = arr[:, :, :3]
-    is_content = (alpha > 20) & ~((rgb[:, :, 0] > 240) & (rgb[:, :, 1] > 240) & (rgb[:, :, 2] > 240))
-    coords = np.argwhere(is_content)
-    if coords.size == 0:
-        return logo_img
-    y0, x0 = coords.min(axis=0)
-    y1, x1 = coords.max(axis=0) + 1
-    return logo_img.crop((x0, y0, x1, y1))
+    img = logo_img.convert("RGBA")
+    width, height = img.size
+    pixels = img.load()
+    min_x, min_y = width, height
+    max_x, max_y = 0, 0
+    found = False
+
+    for y in range(height):
+        for x in range(width):
+            r, g, b, a = pixels[x, y]
+            if a > 20 and not (r > 240 and g > 240 and b > 240):
+                if x < min_x: min_x = x
+                if x > max_x: max_x = x
+                if y < min_y: min_y = y
+                if y > max_y: max_y = y
+                found = True
+
+    if found and max_x > min_x and max_y > min_y:
+        return img.crop((min_x, min_y, max_x + 1, max_y + 1))
+    return logo_img
 
 
 def apply_smart_logo_watermark(image_path, output_path=None):
