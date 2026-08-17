@@ -11,7 +11,7 @@ from google import genai
 load_dotenv()
 load_dotenv('reel_engine/.env')
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-FAL_KEY = os.getenv("FAL_KEY", "092232b9-8c57-4cd8-b6c0-5834c6125d89:4abc7379b3003f26666d9ae2ea156e5c")
+FAL_KEY = os.getenv("FAL_KEY")
 WP_URL = os.getenv("WP_URL", "https://hindudevgyan.in")
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
@@ -51,51 +51,36 @@ def safe_generate_content(prompt):
     return None
 
 
-def generate_high_quality_image_prompt(headline, article_text=""):
-    # Strip HTML and truncate to first 600 chars of context
+def generate_high_quality_image_prompt(headline, article_text="", category_name=""):
     clean_context = ""
     if article_text:
         import re
         clean_context = re.sub(r'<[^>]+>', ' ', article_text)[:600].strip()
 
     prompt = f"""
-    You are a Master AI Art Director specializing in hyper-realistic, 8k National Geographic style photography and cinematic Vedic art.
-    Article Headline: "{headline}"
-    Article Context & Ritual Details:
-    "{clean_context}"
+    You are an expert AI Visual Director for a premium Vedic and Hindu media portal.
+    Headline: "{headline}"
+    Category: "{category_name}"
+    Context: "{clean_context}"
 
-    Task: Read the headline AND article context to understand the exact deity, temple, and ritual described. Then write a photorealistic, cinematic visual scene description in English for an AI image generator (FLUX).
-    Rules:
-    - Focus on a HEROIC CENTERED PORTRAIT or TEMPLE SANCTUM SANCTORUM of the exact primary deity or sacred ritual altar described (e.g. Lord Shiva in meditation, Shiva Lingam abhishekam, Goddess Lakshmi, Lord Ganesha, etc.).
-    - Incorporate specific elements from the article (e.g., holy ash, brass trishul, clay diyas, marigold garlands, sacred incense smoke).
-    - Authentic Indian stone temple architecture, dramatic golden hour lighting, depth of field, 8k masterpiece.
-    - NEVER describe distant crowds, background people, or miniature figurines.
-    - NEVER include text, watermark, or words.
-    - Keep it under 35 words.
-
-    Return ONLY the prompt string, nothing else.
+    Task: Create a highly relevant, distinct visual prompt for this specific article.
+    STRICT DIVERSITY RULES:
+    1. If a REAL PHYSICAL TEMPLE / LANDMARK is mentioned (e.g., Amarnath, Kedarnath, Badrinath, Somnath, Ayodhya, Kashi, Ujjain, Vrindavan, Tirupati, Puri):
+       - Name the EXACT landmark clearly (e.g., "Amarnath Holy Cave shrine in Kashmir Himalayas with snow mountains" or "Kedarnath Temple Himalayan facade").
+    2. If PANCHANG, NAKSHATRA, or HOROSCOPE:
+       - Describe ancient Sanskrit palm-leaf manuscripts, antique brass astronomical sundials (yantras), and glowing crescent moon under starry night sky. (NEVER describe a golden deity statue).
+    3. If FESTIVAL & VRAT (e.g. Janmashtami, Diwali, Navratri, Shivratri):
+       - Describe festive puja thalis with flowers, fresh fruits, decorated brass kalash, and glowing earthen oil diyas.
+    4. If A SPECIFIC DEITY (Lord Shiva, Lord Krishna, Lord Rama, Hanuman, Ganesha, Maa Durga):
+       - Describe that specific deity authentically with their iconic symbols (flute, trishul, bow, gada).
+    5. NEVER repeat the same generic golden idol. Make every image match its exact topic.
+    6. Keep prompt under 35 words. Return ONLY the prompt string.
     """
     res = safe_generate_content(prompt)
     if res:
         clean = res.strip().replace('"', '').replace('\n', ' ')
         return clean
-    return f"Heroic centered portrait of sacred deity in ancient stone temple sanctum, glowing brass diyas, golden lighting"
-
-
-def generate_ai_image(prompt, filename="temp_hq_image.jpg"):
-    """
-    Calls centralized image_engine with Cloudflare FLUX.1 [schnell] & tight watermark badge.
-    """
-    from image_engine import generate_hd_featured_image
-    return generate_hd_featured_image(prompt, category="Spiritual Wisdom", output_filename=filename)
-
-
-def process_and_brand_image(temp_filepath, output_filename="branded_featured.webp", headline_text="", category_text="SPIRITUAL WISDOM"):
-    """
-    Applies tight logo watermark if not already applied.
-    """
-    from image_engine import apply_smart_logo_watermark
-    return apply_smart_logo_watermark(temp_filepath, output_filename)
+    return f"{headline}"
 
 
 def upload_image_to_wp(image_path, alt_text=""):
@@ -197,25 +182,21 @@ def enhance_and_fix_posts():
             if terms and len(terms) > 0 and len(terms[0]) > 0:
                 category_name = terms[0][0].get('name', 'SPIRITUAL WISDOM')
 
-        # 1. Generate High Quality Context-Aware FLUX Prompt from Title + Article Body
+        # 1. Generate Context-Aware Visual Prompt from Title + Article Body + Category
         post_content = post.get('content', {}).get('rendered', '')
-        hq_prompt = generate_high_quality_image_prompt(headline, article_text=post_content)
+        hq_prompt = generate_high_quality_image_prompt(headline, article_text=post_content, category_name=category_name)
         
-        # 2. Generate 8K Artwork (Fal.ai FLUX -> Pollinations Fallback)
-        temp_file = f"temp_{slug}.jpg"
-        raw_image = generate_ai_image(hq_prompt, filename=temp_file)
-        if not raw_image:
+        # 2. Smart Hybrid Visual Engine: Real photo if landmark, else 8K FLUX + Snug Watermark
+        final_webp = f"{slug}-hq.webp"
+        from image_engine import generate_hd_featured_image
+        branded_image = generate_hd_featured_image(
+            prompt_text=hq_prompt,
+            category=category_name,
+            output_filename=final_webp
+        )
+        if not branded_image or not os.path.exists(branded_image):
             print("  -> Skipped (Failed to generate image).")
             continue
-
-        # 3. Apply Brand Logo + Category Badge + UnsharpMask + Convert to WebP
-        final_webp = f"{slug}-hq.webp"
-        branded_image = process_and_brand_image(
-            temp_filepath=raw_image,
-            output_filename=final_webp,
-            headline_text=headline,
-            category_text=category_name
-        )
 
         # 4. Upload to WordPress Media Library
         media_id = upload_image_to_wp(branded_image, alt_text=headline)
@@ -232,13 +213,12 @@ def enhance_and_fix_posts():
         else:
             print(f"  -> Failed to update post. Status: {res.status_code}")
 
-        # Cleanup local files
-        for f in [temp_file, final_webp]:
-            if os.path.exists(f):
-                try:
-                    os.remove(f)
-                except Exception:
-                    pass
+        # Cleanup local file
+        if os.path.exists(final_webp):
+            try:
+                os.remove(final_webp)
+            except Exception:
+                pass
 
         time.sleep(3)
 

@@ -103,23 +103,19 @@ def fetch_real_temple_photo(query_text):
     Searches official open media repositories (Wikipedia/Wikimedia) for authentic,
     high-resolution photographs of famous Indian temples & pilgrimage sites.
     """
-    # Clean temple query
-    clean_query = query_text.replace(" ", "_").strip()
-    candidate_titles = [
-        f"{clean_query}_Temple",
-        f"{clean_query}_Mandir",
-        clean_query
+    headers = {'User-Agent': 'HinduDevGyan/2.0 (info@hindudevgyan.in)'}
+    search_queries = [
+        f"{query_text} temple",
+        query_text
     ]
 
-    headers = {'User-Agent': 'HinduDevGyan/2.0 (info@hindudevgyan.in)'}
-
-    for title in candidate_titles:
+    for q in search_queries:
         try:
-            url = f"https://en.wikipedia.org/w/api.php?action=query&titles={urllib.parse.quote(title)}&prop=pageimages&format=json&pithumbsize=1280"
+            url = f"https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch={urllib.parse.quote(q)}&gsrlimit=3&prop=pageimages&pithumbsize=1280&format=json"
             res = requests.get(url, headers=headers, timeout=12)
             if res.status_code == 200:
                 pages = res.json().get("query", {}).get("pages", {})
-                for pid, p in pages.items():
+                for pid, p in sorted(pages.items(), key=lambda x: x[1].get('index', 99)):
                     if "thumbnail" in p and "source" in p["thumbnail"]:
                         img_url = p["thumbnail"]["source"]
                         img_data = requests.get(img_url, headers=headers, timeout=20).content
@@ -127,9 +123,10 @@ def fetch_real_temple_photo(query_text):
                             temp_file = "temp_real_temple.jpg"
                             with open(temp_file, "wb") as f:
                                 f.write(img_data)
-                            print(f"[OK] Fetched authentic real photo for '{title}' from official repository")
+                            print(f"[OK] Fetched authentic real photo for '{p.get('title')}' from official repository")
                             return temp_file
-        except Exception:
+        except Exception as e:
+            print(f"Photo search attempt error: {e}")
             continue
 
     return None
