@@ -74,167 +74,19 @@ def generate_high_quality_image_prompt(headline):
 
 
 def generate_ai_image(prompt, filename="temp_hq_image.jpg"):
-    print(f"  -> Generating 8K Studio Artwork for: {prompt[:60]}...")
-    
-    # 1. Primary Engine: Fal.ai FLUX.1 Schnell
-    if FAL_KEY:
-        try:
-            url = 'https://fal.run/fal-ai/flux/schnell'
-            headers = {
-                'Authorization': f'Key {FAL_KEY}',
-                'Content-Type': 'application/json'
-            }
-            payload = {
-                'prompt': f"Authentic 8k National Geographic photography, {prompt}, masterpiece, cinematic warm golden lighting, Hasselblad medium format, natural textures, sharp focus, 35mm photograph",
-                'image_size': 'landscape_16_9',
-                'num_images': 1,
-                'enable_safety_checker': True
-            }
-            res = requests.post(url, headers=headers, json=payload, timeout=40)
-            if res.status_code == 200:
-                data = res.json()
-                img_url = data['images'][0]['url']
-                img_data = requests.get(img_url, timeout=30).content
-                with open(filename, 'wb') as f:
-                    f.write(img_data)
-                print(f"  -> [Fal.ai FLUX] Image generated successfully! Size: {len(img_data)} bytes")
-                return filename
-            else:
-                print(f"  -> Fal.ai notice ({res.status_code}: {res.text[:80]}), switching to FLUX fallback...")
-        except Exception as e:
-            print(f"  -> Fal.ai exception: {e}, falling back...")
-
-    # 2. Fallback Engine: Pollinations FLUX
-    full_prompt = f"8k, ultra-detailed photorealistic award-winning photography, {prompt}, masterpiece, cinematic warm golden lighting, natural textures, sharp focus, 35mm photograph"
-    encoded_prompt = urllib.parse.quote(full_prompt)
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-    for attempt in range(2):
-        seed = int(time.time()) + (attempt * 100)
-        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=flux&width=1200&height=630&nologo=true&enhance=true&seed={seed}"
-        try:
-            response = requests.get(url, stream=True, headers=headers, timeout=30)
-            if response.status_code == 200 and len(response.content) > 10000:
-                with open(filename, 'wb') as f:
-                    for chunk in response.iter_content(1024):
-                        f.write(chunk)
-                return filename
-            else:
-                time.sleep(2)
-        except Exception:
-            time.sleep(2)
-
-    return None
-
-
-def get_cross_platform_fonts(size_title=34, size_badge=18):
-    font_paths = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-        r"C:\Windows\Fonts\arialbd.ttf",
-        r"C:\Windows\Fonts\arial.ttf"
-    ]
-    font_title, font_badge = None, None
-    for path in font_paths:
-        if os.path.exists(path):
-            try:
-                font_title = ImageFont.truetype(path, size_title)
-                font_badge = ImageFont.truetype(path, size_badge)
-                break
-            except Exception:
-                pass
-    if not font_title:
-        try:
-            font_title = ImageFont.load_default(size=size_title)
-            font_badge = ImageFont.load_default(size=size_badge)
-        except Exception:
-            font_title = ImageFont.load_default()
-            font_badge = ImageFont.load_default()
-
-    return font_title, font_badge
+    """
+    Calls centralized image_engine with Cloudflare FLUX.1 [schnell] & tight watermark badge.
+    """
+    from image_engine import generate_hd_featured_image
+    return generate_hd_featured_image(prompt, category="Spiritual Wisdom", output_filename=filename)
 
 
 def process_and_brand_image(temp_filepath, output_filename="branded_featured.webp", headline_text="", category_text="SPIRITUAL WISDOM"):
-    try:
-        raw_img = Image.open(temp_filepath)
-        img = raw_img.convert("RGBA")
-        width, height = img.size
-
-        # 1. Subtle Dark Gradient at bottom (180px)
-        overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        draw_ov = ImageDraw.Draw(overlay)
-        banner_top = height - 180
-        for y in range(banner_top, height):
-            alpha = int(((y - banner_top) / (height - banner_top)) * 180)
-            draw_ov.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
-        img = Image.alpha_composite(img, overlay)
-
-        draw = ImageDraw.Draw(img)
-        font_title, font_badge = get_cross_platform_fonts(size_title=32, size_badge=16)
-
-        # 2. Category Pill Badge
-        badge_text = category_text.upper()[:22]
-        try:
-            badge_bbox = font_badge.getbbox(badge_text)
-            badge_w = (badge_bbox[2] - badge_bbox[0]) + 20
-            badge_h = (badge_bbox[3] - badge_bbox[1]) + 12
-        except Exception:
-            badge_w, badge_h = 140, 28
-
-        badge_x1 = 35
-        badge_y1 = height - 135
-        badge_x2 = badge_x1 + badge_w
-        badge_y2 = badge_y1 + badge_h
-
-        draw.rounded_rectangle([badge_x1, badge_y1, badge_x2, badge_y2], radius=5, fill=(232, 84, 10, 245))
-        draw.text((badge_x1 + 10, badge_y1 + 4), badge_text, font=font_badge, fill=(255, 255, 255))
-
-        # 3. Clean Headline Banner Text
-        clean_title = headline_text.upper()[:48]
-        draw.text((35, height - 75), clean_title, font=font_title, fill=(255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0))
-
-        # 4. Inset Top-Right HinduDevGyan Logo Badge
-        logo_candidates = [
-            os.path.join(os.path.dirname(__file__), "logo.png"),
-            "logo.png"
-        ]
-        logo_path = next((p for p in logo_candidates if os.path.exists(p)), None)
-
-        if logo_path:
-            logo = Image.open(logo_path).convert("RGBA")
-            bbox = logo.getbbox()
-            if bbox:
-                logo = logo.crop(bbox)
-
-            target_w = 110
-            w_percent = (target_w / float(logo.size[0]))
-            target_h = int((float(logo.size[1]) * float(w_percent)))
-            logo = logo.resize((target_w, target_h), Image.Resampling.LANCZOS)
-
-            margin_right = 30
-            margin_top = 20
-            padding = 6
-            card_w = target_w + (padding * 2)
-            card_h = target_h + (padding * 2)
-
-            card_x1 = width - margin_right - card_w
-            card_y1 = margin_top
-            card_x2 = width - margin_right
-            card_y2 = margin_top + card_h
-
-            card_ov = Image.new("RGBA", (width, height), (255, 255, 255, 240))
-            card_draw = ImageDraw.Draw(card_ov)
-            card_draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=6, fill=(255, 255, 255, 240), outline=(232, 84, 10, 240), width=1)
-            img = Image.alpha_composite(img, card_ov)
-            img.paste(logo, (card_x1 + padding, card_y1 + padding), logo)
-
-        # 5. Apply UnsharpMask & Save WebP
-        combined = img.convert("RGB")
-        sharpened = combined.filter(ImageFilter.UnsharpMask(radius=1.2, percent=125, threshold=2))
-        sharpened.save(output_filename, "WEBP", quality=88)
-        return output_filename
-    except Exception as e:
-        print(f"  -> Error in branding image: {e}")
-        return temp_filepath
+    """
+    Applies tight logo watermark if not already applied.
+    """
+    from image_engine import apply_smart_logo_watermark
+    return apply_smart_logo_watermark(temp_filepath, output_filename)
 
 
 def upload_image_to_wp(image_path, alt_text=""):

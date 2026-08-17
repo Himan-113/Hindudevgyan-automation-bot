@@ -289,27 +289,31 @@ def clean_category_name(raw_category):
 def rewrite_article_and_image_prompt(original_title):
     print("Phase 3: Scholar AI & Marketing Editor writing article and designing visual image prompt...")
     prompt = f"""
-    You are an elite Hindu Religious Scholar, Vedic Expert, and SEO Specialist. Write a highly engaging, deeply respectful, and SEO-optimized article in ENGLISH based on this Hindi news/topic:
+    You are an elite Hindu Religious Scholar, Vedic Astrologer, and SEO Editor-in-Chief. Write a deeply engaging, authoritative, and SEO-optimized article in ENGLISH based on this Hindi news/topic:
     "{original_title}"
 
-    CRITICAL REQUIREMENTS:
-    1. Language: The entire article MUST be written in high-quality, premium English.
-    2. Headline (H1): Write a highly clickable, English headline. IT MUST BE 100% UNIQUE. Find a creative, spiritual angle.
-    3. URL Slug: Generate a 5-6 word English translation of the headline, formatted with hyphens (e.g., significance-of-kashi-vishwanath-sawan).
-    4. Internal Linking: You MUST naturally weave at least 3 internal HTML links into the article text to build SEO authority. Use this mapping:
-       - Mentions of "Kundli", "Birth Chart", or "Horoscope" -> <a href="https://hindudevgyan.in/free-kundli/">
-       - Mentions of "Vastu" -> <a href="https://hindudevgyan.in/category/vastu/">
-       - Mentions of "Panchang" or "Muhurat" -> <a href="https://hindudevgyan.in/category/panchang/">
-       - Mentions of "Bhagavad Gita" or "Karma" -> <a href="https://hindudevgyan.in/category/gita-wisdom/">
-       - Mentions of "HinduDevGyan" -> <a href="https://hindudevgyan.in/">
-    5. Formatting: Use proper HTML headings (<h2>) like "Significance", "Mythology". Use short paragraphs, bold important names/facts, and include at least one bulleted list.
-    6. BILINGUAL WHATSAPP OPTIMIZATION: At the very top of your HTML Content, before the English text, you MUST write a 2-3 sentence highly engaging Hindi summary titled '<h3>हिंदी सारांश:</h3>'.
-    7. Category: Choose ONE category from this exact list: Festivals & Vrat, Temples & Pilgrimage, Astrology & Horoscope, Vedic Wisdom, Gita Wisdom, Panchang, Mantras & Chants, Mythology, Spiritual News.
-    8. Ecommerce Tag: Choose ONE keyword from: "shiva", "pooja", "gita", "general".
-    9. Visual AI Image Prompt: Write a detailed, concrete visual description in English for Google Imagen 3 API (e.g., "Photorealistic painting of Lord Shiva meditating at Kashi Vishwanath temple during sunrise, glowing oil diyas, divine golden aura, 8k resolution"). Do NOT put text in this image prompt.
-    10. Image Alt Text: Write a short, literal English description of that image.
-    11. Short Image Banner Text: Provide a SHORT 3-5 WORD visual headline for the image text banner (e.g. "KASHI VISHWANATH: SAWAN GUIDELINES" or "SURYA GRAHAN 2026: COSMIC WARNING"). DO NOT copy the full long article title!
-    12. SEO Meta: Provide "meta_title" (under 60 chars), "meta_description" (under 155 chars), and "focus_keyword" (2-4 word phrase).
+    CRITICAL EDITORIAL REQUIREMENTS:
+    1. Language: Premium, engaging English.
+    2. Headline (H1): High-CTR, creative, spiritual English headline (100% Unique).
+    3. URL Slug: Clean 4-6 word hyphenated slug (e.g. significance-of-kashi-vishwanath-sawan).
+    4. Internal Linking: Naturally embed at least 3 internal HTML links:
+       - Kundli / Horoscope -> <a href="https://hindudevgyan.in/free-kundli/">
+       - Vastu -> <a href="https://hindudevgyan.in/category/vastu/">
+       - Panchang / Muhurat -> <a href="https://hindudevgyan.in/category/panchang/">
+       - Bhagavad Gita / Karma -> <a href="https://hindudevgyan.in/category/gita-wisdom/">
+       - HinduDevGyan -> <a href="https://hindudevgyan.in/">
+    5. High E-E-A-T Content Structure in HTML:
+       - Top: <h3>हिंदी सारांश:</h3> with 3 clear bullet points summarizing the event for mobile/WhatsApp readers.
+       - <h2>Significance & Vedic Context</h2>: Deep spiritual and mythological background.
+       - <blockquote>: An authentic Sanskrit Shloka with English transliteration and word-by-word meaning.
+       - <h2>Rituals, Vidhi & Muhurat</h2>: Step-by-step puja vidhi, timing table (if applicable), and Dos & Don'ts.
+       - <h2>Frequently Asked Questions</h2>: 3 crisp Q&A pairs (<h3> and <p>) optimized for Google FAQ Rich Snippets.
+    6. Category: Choose ONE from: Festivals & Vrat, Temples & Pilgrimage, Astrology & Horoscope, Vedic Wisdom, Gita Wisdom, Panchang, Mantras & Chants, Mythology, Spiritual News.
+    7. Ecommerce Tag: Choose ONE: "shiva", "pooja", "gita", "general".
+    8. Visual AI Image Prompt: A concrete, literal 20-30 word visual scene description for FLUX.1 (e.g., "Lord Shiva seated in meditation at Kashi Vishwanath temple sanctum with glowing brass oil lamps, fresh bilva patra offerings, holy incense smoke"). Do NOT include text.
+    9. Image Alt Text: Short descriptive alt text containing primary subject.
+    10. Short Image Banner Text: 3-5 word concise headline for image reference.
+    11. SEO Meta: "meta_title" (<60 chars), "meta_description" (<155 chars), and "focus_keyword".
 
     Format output EXACTLY as valid JSON:
     {{
@@ -317,13 +321,13 @@ def rewrite_article_and_image_prompt(original_title):
         "slug": "your-english-slug-here",
         "category": "Temples & Pilgrimage",
         "ecommerce_tag": "shiva",
-        "image_prompt": "Detailed concrete visual prompt for Imagen 3",
+        "image_prompt": "Detailed concrete visual scene for FLUX.1",
         "image_alt_text": "Short literal alt description",
         "image_banner_text": "SHORT 3-5 WORD BANNER TITLE",
         "meta_title": "SEO title under 60 chars",
         "meta_description": "SEO description under 155 chars",
         "focus_keyword": "Focus keyword phrase",
-        "content": "<h3>हिंदी सारांश:</h3><p>Your Hindi summary...</p><h2>First Heading</h2><p>Article body...</p>"
+        "content": "<h3>हिंदी सारांश:</h3><ul><li>Point 1</li><li>Point 2</li></ul><h2>Significance & Vedic Context</h2><p>...</p>"
     }}
     """
 
@@ -346,172 +350,20 @@ def rewrite_article_and_image_prompt(original_title):
         return None
 
 
-def get_cross_platform_fonts(size_title=34, size_badge=18):
-    font_paths = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-        r"C:\Windows\Fonts\arialbd.ttf",
-        r"C:\Windows\Fonts\arial.ttf"
-    ]
-    font_title, font_badge = None, None
-    for path in font_paths:
-        if os.path.exists(path):
-            try:
-                font_title = ImageFont.truetype(path, size_title)
-                font_badge = ImageFont.truetype(path, size_badge)
-                break
-            except Exception:
-                pass
-    if not font_title:
-        try:
-            font_title = ImageFont.load_default(size=size_title)
-            font_badge = ImageFont.load_default(size=size_badge)
-        except Exception:
-            font_title = ImageFont.load_default()
-            font_badge = ImageFont.load_default()
-
-    return font_title, font_badge
-
-
 def generate_ai_image(prompt, banner_text="", category_text="Spiritual News", filename="featured_image.webp"):
-    print(f"Phase 4: Generating 100% Relevant HD Artwork... ({banner_text})")
-    temp_jpg = "temp_bg.jpg"
-
-    fal_key = os.getenv("FAL_KEY", "092232b9-8c57-4cd8-b6c0-5834c6125d89:4abc7379b3003f26666d9ae2ea156e5c")
-    if fal_key:
-        try:
-            url = 'https://fal.run/fal-ai/flux/schnell'
-            headers = {'Authorization': f'Key {fal_key}', 'Content-Type': 'application/json'}
-            payload = {
-                'prompt': f"Authentic 8k National Geographic photography, {prompt}, masterpiece, cinematic warm golden lighting, Hasselblad medium format, natural textures, sharp focus, 35mm photograph",
-                'image_size': 'landscape_16_9',
-                'num_images': 1,
-                'enable_safety_checker': True
-            }
-            res = requests.post(url, headers=headers, json=payload, timeout=40)
-            if res.status_code == 200:
-                data = res.json()
-                img_url = data['images'][0]['url']
-                img_data = requests.get(img_url, timeout=30).content
-                with open(temp_jpg, 'wb') as f:
-                    f.write(img_data)
-                print("Successfully generated studio 8K FLUX image via Fal.ai!")
-                return temp_jpg
-        except Exception:
-            pass
-
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-    for attempt in range(2):
-        seed = random.randint(1, 999999)
-        encoded_prompt = urllib.parse.quote(f"Photorealistic 8k artwork of {prompt}, divine golden lighting, National Geographic style")
-        pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=flux&width=1200&height=630&nologo=true&enhance=true&seed={seed}"
-
-        try:
-            response = requests.get(pollinations_url, stream=True, headers=headers, timeout=25)
-            if response.status_code == 200 and len(response.content) > 10000:
-                with open(temp_jpg, 'wb') as f:
-                    for chunk in response.iter_content(1024):
-                        f.write(chunk)
-                print("Successfully generated fresh photorealistic AI background image!")
-                return temp_jpg
-        except Exception as e:
-            print(f"Image engine attempt {attempt+1} notice ({e})")
-            time.sleep(2)
-
-    return None
+    """
+    Calls centralized image_engine with Cloudflare FLUX.1 [schnell] & tight watermark badge.
+    """
+    from image_engine import generate_hd_featured_image
+    return generate_hd_featured_image(prompt, category=category_text, output_filename=filename)
 
 
 def compress_image(temp_filepath, output_filename="featured_image.webp", headline_text="", category_text="SPIRITUAL NEWS"):
     """
-    Overlays a high-CTR news thumbnail text banner at bottom (260px height),
-    insets logo.png at top-right, applies UnsharpMask sharpening filter for HD crispness,
-    and compresses to ultra-fast WebP format (25-45 KB).
+    Applies smart watermark if not already applied.
     """
-    try:
-        img = Image.open(temp_filepath).convert("RGBA")
-        width, height = img.size
-
-        # 1. Extended Dark Gradient Banner at bottom (260px height for breathing room)
-        overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        draw_ov = ImageDraw.Draw(overlay)
-        banner_height = 260
-        for y in range(height - banner_height, height):
-            alpha = int(230 * ((y - (height - banner_height)) / banner_height))
-            draw_ov.line([(0, y), (width, y)], fill=(0, 0, 0, alpha))
-        img = Image.alpha_composite(img, overlay)
-
-        draw = ImageDraw.Draw(img)
-
-        # 2. Cross-platform Font Selection (Linux + Windows bold font support)
-        font_title, font_badge = get_cross_platform_fonts(size_title=34, size_badge=18)
-
-        # 3. Category Pill Badge
-        badge_text = category_text.upper()[:25]
-        try:
-            badge_bbox = font_badge.getbbox(badge_text)
-            badge_w = (badge_bbox[2] - badge_bbox[0]) + 24
-            badge_h = (badge_bbox[3] - badge_bbox[1]) + 14
-        except Exception:
-            badge_w, badge_h = 160, 32
-
-        badge_x1 = 38
-        badge_y1 = height - 190
-        badge_x2 = badge_x1 + badge_w
-        badge_y2 = badge_y1 + badge_h
-
-        draw.rounded_rectangle([badge_x1, badge_y1, badge_x2, badge_y2], radius=6, fill=(232, 84, 10, 240))
-        draw.text((badge_x1 + 12, badge_y1 + 5), badge_text, font=font_badge, fill=(255, 255, 255))
-
-        # 4. Short Visual Banner Title Overlay (Max 45 chars, smart 3-5 word heading)
-        clean_title = headline_text.upper()[:45]
-        draw.text((38, height - 120), clean_title, font=font_title, fill=(255, 255, 255), stroke_width=2, stroke_fill=(0, 0, 0))
-
-        # 5. Inset Top-Right Logo Badge
-        logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
-        if os.path.exists(logo_path):
-            logo = Image.open(logo_path).convert("RGBA")
-
-            bbox = logo.getbbox()
-            if bbox:
-                logo = logo.crop(bbox)
-
-            target_w = 110
-            w_percent = (target_w / float(logo.size[0]))
-            target_h = int((float(logo.size[1]) * float(w_percent)))
-            logo = logo.resize((target_w, target_h), Image.Resampling.LANCZOS)
-
-            margin_right = 38
-            margin_top = 22
-            padding = 6
-            card_w = target_w + (padding * 2)
-            card_h = target_h + (padding * 2)
-
-            card_x1 = width - margin_right - card_w
-            card_y1 = margin_top
-            card_x2 = width - margin_right
-            card_y2 = margin_top + card_h
-
-            card_ov = Image.new("RGBA", (width, height), (255, 255, 255, 0))
-            card_draw = ImageDraw.Draw(card_ov)
-            card_draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=6, fill=(255, 255, 255, 235), outline=(232, 84, 10, 240), width=1)
-            img = Image.alpha_composite(img, card_ov)
-            img.paste(logo, (card_x1 + padding, card_y1 + padding), logo)
-
-        # 6. Apply UnsharpMask & Save WebP
-        combined = img.convert("RGB")
-        sharpened = combined.filter(ImageFilter.UnsharpMask(radius=1.2, percent=125, threshold=2))
-        sharpened.save(output_filename, "WEBP", quality=85)
-        print(f"Compressed & News Banner Watermarked image (WebP, Sharpness enhanced, File: {output_filename})")
-
-        if os.path.exists(temp_filepath) and temp_filepath != output_filename:
-            try:
-                os.remove(temp_filepath)
-            except Exception:
-                pass
-        return output_filename
-    except Exception as e:
-        print(f"Could not process image (continuing with original): {e}")
-        return temp_filepath
+    from image_engine import apply_smart_logo_watermark
+    return apply_smart_logo_watermark(temp_filepath, output_filename)
 
 
 def get_or_create_category(category_name):
