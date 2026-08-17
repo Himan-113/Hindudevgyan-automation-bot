@@ -1,4 +1,5 @@
 import os
+import sys
 import requests
 import json
 import random
@@ -21,6 +22,47 @@ WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+
+
+def safe_generate_content(prompt):
+    """
+    Robustly calls Gemini API using a fallback chain of models:
+    gemini-2.5-flash -> gemini-2.5-flash-lite -> gemini-3.6-flash -> gemini-flash-latest.
+    Automatically retries on 429 (quota/rate limit) and 503 (high demand) errors.
+    """
+    if not client:
+        print("Error: Gemini client not initialized (GEMINI_API_KEY missing).")
+        return None
+
+    models_to_try = [
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-3.6-flash',
+        'gemini-flash-latest'
+    ]
+    last_error = None
+
+    for model in models_to_try:
+        for attempt in range(3):
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt
+                )
+                if response and response.text:
+                    return response.text
+            except Exception as e:
+                err_msg = str(e)
+                last_error = e
+                print(f"Warning: Model {model} attempt {attempt+1} failed: {err_msg[:120]}")
+                if any(k in err_msg for k in ['429', '503', 'RESOURCE_EXHAUSTED', 'UNAVAILABLE', 'quota']):
+                    time.sleep(3 * (attempt + 1))
+                else:
+                    break
+
+    print(f"Error: All Gemini model attempts failed. Last error: {last_error}")
+    return None
+
 
 RSS_FEEDS = [
     "https://www.abplive.com/lifestyle/religion/feed",
@@ -216,21 +258,21 @@ def deduplicate_and_select(raw_news):
     ]
     """
 
-    try:
-        response = client.models.generate_content(
-            model='gemini-flash-latest',
-            contents=prompt
-        )
-        text = response.text
-        if text.startswith("```json"):
-            text = text[7:-3].strip()
-        elif text.startswith("```"):
-            text = text[3:-3].strip()
+    raw_text = safe_generate_content(prompt)
+    if not raw_text:
+        print("Failed AI deduplication: Could not get response from Gemini API.")
+        return []
+    text = raw_text.strip()
+    if text.startswith("```json"):
+        text = text[7:-3].strip()
+    elif text.startswith("```"):
+        text = text[3:-3].strip()
 
+    try:
         selected_topics = json.loads(text)
         return selected_topics
     except Exception as e:
-        print(f"Failed AI deduplication: {e}")
+        print(f"Failed AI deduplication JSON parsing: {e}")
         return []
 
 
@@ -286,22 +328,22 @@ def rewrite_article_and_image_prompt(original_title):
     }}
     """
 
-    try:
-        response = client.models.generate_content(
-            model='gemini-flash-latest',
-            contents=prompt
-        )
-        text = response.text
-        if text.startswith("```json"):
-            text = text[7:-3].strip()
-        elif text.startswith("```"):
-            text = text[3:-3].strip()
+    raw_text = safe_generate_content(prompt)
+    if not raw_text:
+        print("Failed to generate AI article response: Could not get response from Gemini API.")
+        return None
+    text = raw_text.strip()
+    if text.startswith("```json"):
+        text = text[7:-3].strip()
+    elif text.startswith("```"):
+        text = text[3:-3].strip()
 
+    try:
         data = json.loads(text)
         data['category'] = clean_category_name(data.get('category'))
         return data
     except Exception as e:
-        print(f"Failed to generate AI article response: {e}")
+        print(f"Failed to parse AI article JSON: {e}")
         return None
 
 
@@ -558,10 +600,14 @@ def publish_wp_post(data, media_id, category_id, slug, meta_title, meta_descript
     response = requests.post(post_url, json=payload, auth=auth)
 
     if response.status_code == 201:
-        print("Successfully published!")
+        post_data = response.json()
+        permalink = post_data.get('link', f"{WP_URL}/{slug}/")
+        print(f"Successfully published: {permalink}")
+        return permalink
     else:
         print(f"Failed to publish. Status code: {response.status_code}")
         print(response.text)
+        return None
 
 
 def main():
@@ -581,10 +627,12 @@ def main():
     selected_topics = deduplicate_and_select(fresh_news)
 
     if not selected_topics:
-        print("Editor-in-Chief did not select any topics.")
-        return
+        print("ERROR: Editor-in-Chief did not select any topics (API failure or invalid response).")
+        sys.exit(1)
 
     print(f"Editor-in-Chief selected {len(selected_topics)} distinct topics for publication.")
+    published_count = 0
+    published_posts = []
 
     for news in selected_topics:
         print(f"\n--- Processing Master Topic: {news['title']} ---")
@@ -614,7 +662,7 @@ def main():
 
         category_id = get_or_create_category(clean_cat)
 
-        publish_wp_post(
+        post_link = publish_wp_post(
             rewritten,
             media_id,
             category_id,
@@ -624,7 +672,14 @@ def main():
             rewritten.get('focus_keyword')
         )
 
-        mark_as_posted(news['link'])
+        if post_link:
+            published_posts.append({
+                "title": rewritten['headline'],
+                "link": post_link,
+                "category": clean_cat
+            })
+            mark_as_posted(news['link'])
+            published_count += 1
 
         if final_image and os.path.exists(final_image):
             try:
@@ -633,6 +688,10 @@ def main():
                 pass
 
         time.sleep(5)
+
+    if published_count == 0:
+        print("ERROR: 0 articles were published despite topics being selected. Triggering failure alert.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

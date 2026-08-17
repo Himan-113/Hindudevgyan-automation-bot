@@ -15,6 +15,47 @@ WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+
+def safe_generate_content(prompt):
+    """
+    Robustly calls Gemini API using a fallback chain of models:
+    gemini-2.5-flash -> gemini-2.5-flash-lite -> gemini-3.6-flash -> gemini-flash-latest.
+    Automatically retries on 429 (quota/rate limit) and 503 (high demand) errors.
+    """
+    if not client:
+        print("Error: Gemini client not initialized.")
+        return None
+
+    models_to_try = [
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-3.6-flash',
+        'gemini-flash-latest'
+    ]
+    last_error = None
+
+    for model in models_to_try:
+        for attempt in range(3):
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt
+                )
+                if response and response.text:
+                    return response.text
+            except Exception as e:
+                err_msg = str(e)
+                last_error = e
+                print(f"Warning: Model {model} attempt {attempt+1} failed: {err_msg[:120]}")
+                if any(k in err_msg for k in ['429', '503', 'RESOURCE_EXHAUSTED', 'UNAVAILABLE', 'quota']):
+                    time.sleep(3 * (attempt + 1))
+                else:
+                    break
+
+    print(f"Error: All Gemini model attempts failed. Last error: {last_error}")
+    return None
+
+
 def generate_image_prompt(headline):
     prompt = f"""
     You are an expert AI Image Designer. 
@@ -24,15 +65,8 @@ def generate_image_prompt(headline):
     Do NOT include any text in the image prompt.
     Return ONLY the prompt string, nothing else.
     """
-    try:
-        response = client.models.generate_content(
-            model='gemini-flash-latest',
-            contents=prompt
-        )
-        return response.text.strip()
-    except Exception as e:
-        print(f"Failed to generate prompt: {e}")
-        return None
+    res = safe_generate_content(prompt)
+    return res.strip() if res else None
 
 def generate_ai_image(prompt, filename="temp_fix_image.jpg"):
     print(f"  -> Generating image for prompt: {prompt[:50]}...")

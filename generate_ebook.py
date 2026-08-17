@@ -6,11 +6,52 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+
+def safe_generate_content(prompt):
+    """
+    Robustly calls Gemini API using a fallback chain of models:
+    gemini-2.5-flash -> gemini-2.5-flash-lite -> gemini-3.6-flash -> gemini-flash-latest.
+    Automatically retries on 429 (quota/rate limit) and 503 (high demand) errors.
+    """
+    if not client:
+        print("Error: Gemini client not initialized.")
+        return None
+
+    models_to_try = [
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-3.6-flash',
+        'gemini-flash-latest'
+    ]
+    last_error = None
+
+    for model in models_to_try:
+        for attempt in range(3):
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt
+                )
+                if response and response.text:
+                    return response.text
+            except Exception as e:
+                err_msg = str(e)
+                last_error = e
+                print(f"Warning: Model {model} attempt {attempt+1} failed: {err_msg[:120]}")
+                if any(k in err_msg for k in ['429', '503', 'RESOURCE_EXHAUSTED', 'UNAVAILABLE', 'quota']):
+                    time.sleep(3 * (attempt + 1))
+                else:
+                    break
+
+    print(f"Error: All Gemini model attempts failed. Last error: {last_error}")
+    return None
+
+
 def generate_chapter(chapter_title, context):
     print(f"Authoring {chapter_title}...")
     prompt = f"""
-    You are an enlightened Master of Vastu Shastra.
-    Write a highly detailed, professional, and practical 1500-word chapter for a premium E-Book titled "Vastu Shastra for Wealth & Harmony".
+    You are a Master Vastu Shastra Consultant and Vedic Architect.
+    Write an in-depth, highly practical, and beautifully structured chapter for a premium e-book titled "Vastu Shastra Mastery".
     
     Chapter Title: {chapter_title}
     Context for this chapter: {context}
@@ -22,20 +63,16 @@ def generate_chapter(chapter_title, context):
     - DO NOT include markdown backticks (```html) in your response. Just return the raw HTML.
     """
     
-    try:
-        response = client.models.generate_content(
-            model='gemini-flash-latest', 
-            contents=prompt
-        )
-        text = response.text
-        if text.startswith("```html"):
-            text = text[7:-3].strip()
-        elif text.startswith("```"):
-            text = text[3:-3].strip()
-        return text
-    except Exception as e:
-        print(f"Failed to generate chapter: {e}")
+    raw_text = safe_generate_content(prompt)
+    if not raw_text:
+        print("Failed to generate chapter: Could not get response from Gemini API.")
         return ""
+    text = raw_text.strip()
+    if text.startswith("```html"):
+        text = text[7:-3].strip()
+    elif text.startswith("```"):
+        text = text[3:-3].strip()
+    return text
 
 def generate_full_ebook():
     print("Starting Automated E-Book Generation Process...")

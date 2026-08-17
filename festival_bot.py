@@ -1,4 +1,5 @@
 import os
+import sys
 import requests
 import json
 import random
@@ -18,6 +19,47 @@ WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
 
 client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+def safe_generate_content(prompt):
+    """
+    Robustly calls Gemini API using a fallback chain of models:
+    gemini-2.5-flash -> gemini-2.5-flash-lite -> gemini-3.6-flash -> gemini-flash-latest.
+    Automatically retries on 429 (quota/rate limit) and 503 (high demand) errors.
+    """
+    if not client:
+        print("Error: Gemini client not initialized.")
+        return None
+
+    models_to_try = [
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-3.6-flash',
+        'gemini-flash-latest'
+    ]
+    last_error = None
+
+    for model in models_to_try:
+        for attempt in range(3):
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt
+                )
+                if response and response.text:
+                    return response.text
+            except Exception as e:
+                err_msg = str(e)
+                last_error = e
+                print(f"Warning: Model {model} attempt {attempt+1} failed: {err_msg[:120]}")
+                if any(k in err_msg for k in ['429', '503', 'RESOURCE_EXHAUSTED', 'UNAVAILABLE', 'quota']):
+                    time.sleep(3 * (attempt + 1))
+                else:
+                    break
+
+    print(f"Error: All Gemini model attempts failed. Last error: {last_error}")
+    return None
+
 
 # ==========================================
 # CTA HTML BLOCKS
@@ -125,14 +167,18 @@ def generate_weekly_festivals():
     {{"headline": "...", "focus_keyword": "...", "slug": "...", "ecommerce_category": "pooja", "content_html": "...", "image_prompt": "...", "image_alt_text": "...", "meta_title": "...", "meta_description": "..."}}
     """
 
+    raw_text = safe_generate_content(prompt)
+    if not raw_text:
+        print("Failed to generate AI article: Could not get response from Gemini API.")
+        return None
+    text = raw_text.strip()
+    if text.startswith("```json"): text = text[7:-3].strip()
+    elif text.startswith("```"): text = text[3:-3].strip()
+
     try:
-        response = client.models.generate_content(model='gemini-flash-latest', contents=prompt)
-        text = response.text
-        if text.startswith("```json"): text = text[7:-3].strip()
-        elif text.startswith("```"): text = text[3:-3].strip()
         return json.loads(text)
     except Exception as e:
-        print(f"Failed to generate AI article: {e}")
+        print(f"Failed to parse AI article JSON: {e}")
         return None
 
 def generate_ai_image(prompt, topic_keyword="festival", filename="festival_image.webp"):
@@ -364,9 +410,13 @@ def publish_wp_post(data, media_id, category_id):
 
     response = requests.post(post_url, json=payload, auth=auth)
     if response.status_code == 201:
-        print(f"Successfully published: {data['headline']}!")
+        post_data = response.json()
+        permalink = post_data.get('link', f"{WP_URL}/{data['slug']}/")
+        print(f"Successfully published: {permalink}!")
+        return permalink
     else:
         print(f"Failed to publish. Status code: {response.status_code}")
+        return None
 
 def main():
     print("Starting Weekly Festival & Commerce Bot...")
@@ -375,7 +425,8 @@ def main():
         return
     article_data = generate_weekly_festivals()
     if not article_data:
-        return
+        print("ERROR: Failed to generate weekly festival article. Exiting with failure code 1.")
+        sys.exit(1)
     print(f"AI Editor selected headline: {article_data['headline']}")
     print(f"Focus Keyword: {article_data.get('focus_keyword', 'N/A')}")
     temp_image = generate_ai_image(article_data['image_prompt'], topic_keyword=article_data.get('focus_keyword', 'festival'))
@@ -386,7 +437,8 @@ def main():
         final_image = compress_image(temp_image, output_filename=output_webp, headline_text=article_data['headline'], category_text="FESTIVAL & VRAT")
         media_id = upload_image_to_wp(final_image, alt_text=article_data.get('image_alt_text', article_data['headline']))
     category_id = get_or_create_category()
-    publish_wp_post(article_data, media_id, category_id)
+    post_link = publish_wp_post(article_data, media_id, category_id)
+
     if final_image and os.path.exists(final_image):
         try:
             os.remove(final_image)
