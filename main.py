@@ -377,6 +377,29 @@ def generate_ai_image(prompt, banner_text="", category_text="Spiritual News", fi
     print(f"Phase 4: Generating 100% Relevant HD Artwork... ({banner_text})")
     temp_jpg = "temp_bg.jpg"
 
+    fal_key = os.getenv("FAL_KEY", "092232b9-8c57-4cd8-b6c0-5834c6125d89:4abc7379b3003f26666d9ae2ea156e5c")
+    if fal_key:
+        try:
+            url = 'https://fal.run/fal-ai/flux/schnell'
+            headers = {'Authorization': f'Key {fal_key}', 'Content-Type': 'application/json'}
+            payload = {
+                'prompt': f"Authentic 8k National Geographic photography, {prompt}, masterpiece, cinematic warm golden lighting, Hasselblad medium format, natural textures, sharp focus, 35mm photograph",
+                'image_size': 'landscape_16_9',
+                'num_images': 1,
+                'enable_safety_checker': True
+            }
+            res = requests.post(url, headers=headers, json=payload, timeout=40)
+            if res.status_code == 200:
+                data = res.json()
+                img_url = data['images'][0]['url']
+                img_data = requests.get(img_url, timeout=30).content
+                with open(temp_jpg, 'wb') as f:
+                    f.write(img_data)
+                print("Successfully generated studio 8K FLUX image via Fal.ai!")
+                return temp_jpg
+        except Exception:
+            pass
+
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
     for attempt in range(2):
         seed = random.randint(1, 999999)

@@ -11,6 +11,7 @@ from google import genai
 load_dotenv()
 load_dotenv('reel_engine/.env')
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+FAL_KEY = os.getenv("FAL_KEY", "092232b9-8c57-4cd8-b6c0-5834c6125d89:4abc7379b3003f26666d9ae2ea156e5c")
 WP_URL = os.getenv("WP_URL", "https://hindudevgyan.in")
 WP_USERNAME = os.getenv("WP_USERNAME")
 WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
@@ -32,8 +33,6 @@ def safe_generate_content(prompt):
         'gemini-3.6-flash',
         'gemini-flash-latest'
     ]
-    last_error = None
-
     for model in models_to_try:
         for attempt in range(3):
             try:
@@ -45,7 +44,6 @@ def safe_generate_content(prompt):
                     return response.text
             except Exception as e:
                 err_msg = str(e)
-                last_error = e
                 if any(k in err_msg for k in ['429', '503', 'RESOURCE_EXHAUSTED', 'UNAVAILABLE', 'quota']):
                     time.sleep(2 * (attempt + 1))
                 else:
@@ -76,10 +74,39 @@ def generate_high_quality_image_prompt(headline):
 
 
 def generate_ai_image(prompt, filename="temp_hq_image.jpg"):
-    print(f"  -> Generating FLUX 8K Studio Artwork for: {prompt[:60]}...")
-    full_prompt = f"8k, ultra-detailed photorealistic award-winning photography, {prompt}, masterpiece, cinematic warm golden lighting, Hasselblad medium format camera, natural textures, sharp focus, 35mm photograph"
-    encoded_prompt = urllib.parse.quote(full_prompt)
+    print(f"  -> Generating 8K Studio Artwork for: {prompt[:60]}...")
     
+    # 1. Primary Engine: Fal.ai FLUX.1 Schnell
+    if FAL_KEY:
+        try:
+            url = 'https://fal.run/fal-ai/flux/schnell'
+            headers = {
+                'Authorization': f'Key {FAL_KEY}',
+                'Content-Type': 'application/json'
+            }
+            payload = {
+                'prompt': f"Authentic 8k National Geographic photography, {prompt}, masterpiece, cinematic warm golden lighting, Hasselblad medium format, natural textures, sharp focus, 35mm photograph",
+                'image_size': 'landscape_16_9',
+                'num_images': 1,
+                'enable_safety_checker': True
+            }
+            res = requests.post(url, headers=headers, json=payload, timeout=40)
+            if res.status_code == 200:
+                data = res.json()
+                img_url = data['images'][0]['url']
+                img_data = requests.get(img_url, timeout=30).content
+                with open(filename, 'wb') as f:
+                    f.write(img_data)
+                print(f"  -> [Fal.ai FLUX] Image generated successfully! Size: {len(img_data)} bytes")
+                return filename
+            else:
+                print(f"  -> Fal.ai notice ({res.status_code}: {res.text[:80]}), switching to FLUX fallback...")
+        except Exception as e:
+            print(f"  -> Fal.ai exception: {e}, falling back...")
+
+    # 2. Fallback Engine: Pollinations FLUX
+    full_prompt = f"8k, ultra-detailed photorealistic award-winning photography, {prompt}, masterpiece, cinematic warm golden lighting, natural textures, sharp focus, 35mm photograph"
+    encoded_prompt = urllib.parse.quote(full_prompt)
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
     for attempt in range(2):
         seed = int(time.time()) + (attempt * 100)
@@ -93,8 +120,7 @@ def generate_ai_image(prompt, filename="temp_hq_image.jpg"):
                 return filename
             else:
                 time.sleep(2)
-        except Exception as e:
-            print(f"  -> Attempt {attempt+1} notice ({e})")
+        except Exception:
             time.sleep(2)
 
     return None
@@ -128,9 +154,6 @@ def get_cross_platform_fonts(size_title=34, size_badge=18):
 
 
 def process_and_brand_image(temp_filepath, output_filename="branded_featured.webp", headline_text="", category_text="SPIRITUAL WISDOM"):
-    """
-    Overlays high-CTR news thumbnail banner, logo watermark, applies UnsharpMask sharpening, and compresses to WebP.
-    """
     try:
         raw_img = Image.open(temp_filepath)
         img = raw_img.convert("RGBA")
@@ -172,7 +195,6 @@ def process_and_brand_image(temp_filepath, output_filename="branded_featured.web
         # 4. Inset Top-Right HinduDevGyan Logo Badge
         logo_candidates = [
             os.path.join(os.path.dirname(__file__), "logo.png"),
-            os.path.join(os.path.dirname(__file__), "cropped-hindu-dev-logo-without-background-1-1-300x70.png"),
             "logo.png"
         ]
         logo_path = next((p for p in logo_candidates if os.path.exists(p)), None)
@@ -199,7 +221,7 @@ def process_and_brand_image(temp_filepath, output_filename="branded_featured.web
             card_x2 = width - margin_right
             card_y2 = margin_top + card_h
 
-            card_ov = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+            card_ov = Image.new("RGBA", (width, height), (255, 255, 255, 240))
             card_draw = ImageDraw.Draw(card_ov)
             card_draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=6, fill=(255, 255, 255, 240), outline=(232, 84, 10, 240), width=1)
             img = Image.alpha_composite(img, card_ov)
@@ -241,7 +263,6 @@ def upload_image_to_wp(image_path, alt_text=""):
 
 
 def fetch_all_recent_posts(limit=100):
-    """Fetches up to limit recent posts across paginated WP API."""
     auth = (WP_USERNAME, WP_APP_PASSWORD)
     all_posts = []
     page = 1
@@ -287,7 +308,6 @@ def enhance_and_fix_posts():
     top_upgrade_posts = posts[:30]
     print(f"[*] Selecting top {len(top_upgrade_posts)} recent posts for High-End FLUX Art & Logo Upgrade.\n")
 
-    # Combine uniquely (do missing first, then upgrade remaining of top 30)
     seen_ids = set()
     work_queue = []
 
@@ -310,7 +330,6 @@ def enhance_and_fix_posts():
         headline = post['title']['rendered']
         slug = post.get('slug', f'post-{post_id}')
         
-        # Extract Category
         category_name = "SPIRITUAL WISDOM"
         if '_embedded' in post and 'wp:term' in post['_embedded']:
             terms = post['_embedded']['wp:term']
@@ -322,7 +341,7 @@ def enhance_and_fix_posts():
         # 1. Generate High Quality FLUX Prompt
         hq_prompt = generate_high_quality_image_prompt(headline)
         
-        # 2. Generate FLUX 8K Artwork
+        # 2. Generate 8K Artwork (Fal.ai FLUX -> Pollinations Fallback)
         temp_file = f"temp_{slug}.jpg"
         raw_image = generate_ai_image(hq_prompt, filename=temp_file)
         if not raw_image:
@@ -361,7 +380,7 @@ def enhance_and_fix_posts():
                 except Exception:
                     pass
 
-        time.sleep(3)  # Gentle spacing
+        time.sleep(3)
 
     print(f"\n[+] ALL DONE! Successfully updated {success_count} posts with High-End Branded 8K Images.")
 
