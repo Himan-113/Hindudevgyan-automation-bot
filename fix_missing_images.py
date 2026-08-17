@@ -27,9 +27,8 @@ def safe_generate_content(prompt):
         return None
 
     models_to_try = [
-        'gemini-2.5-flash',
-        'gemini-2.5-flash-lite',
         'gemini-3.6-flash',
+        'gemini-2.5-flash-lite',
         'gemini-flash-latest'
     ]
     last_error = None

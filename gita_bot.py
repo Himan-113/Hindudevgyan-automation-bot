@@ -32,9 +32,8 @@ def safe_generate_content(prompt):
         return None
 
     models_to_try = [
-        'gemini-2.5-flash',
-        'gemini-2.5-flash-lite',
         'gemini-3.6-flash',
+        'gemini-2.5-flash-lite',
         'gemini-flash-latest'
     ]
     last_error = None
@@ -235,44 +234,26 @@ def sloka_already_used(sanskrit_text, recent_content_blobs):
 
 
 def generate_ai_image(prompt, topic_keyword="gita wisdom", filename="gita_image.webp"):
-    print(f"Generating 100% Relevant Artwork via Google Imagen 3 API... ({topic_keyword})")
+    print(f"Generating 100% Relevant HD Artwork... ({topic_keyword})")
     temp_jpg = "temp_gita_bg.jpg"
-    seed = random.randint(1, 999999)
 
-    # Tier 1: Primary Engine - Google Imagen 3 API (`imagen-3.0-generate-002`)
-    try:
-        res = client.models.generate_images(
-            model='imagen-3.0-generate-002',
-            prompt=f"Photorealistic 8k artwork of {prompt}, divine lighting, highly detailed, 35mm lens, masterpiece",
-            config=dict(
-                number_of_images=1,
-                output_mime_type='image/jpeg',
-                aspect_ratio='16:9'
-            )
-        )
-        if res and res.generated_images and len(res.generated_images[0].image.image_bytes) > 20000:
-            with open(temp_jpg, "wb") as f:
-                f.write(res.generated_images[0].image.image_bytes)
-            print("Successfully generated 100% relevant HD artwork via Google Imagen 3 API!")
-            return temp_jpg
-    except Exception as e:
-        print(f"Google Imagen 3 API notice ({e}), failing over to Pollinations AI engine...")
-
-    # Tier 2: Secondary Engine - Pollinations AI
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-    encoded_prompt = urllib.parse.quote(f"Photorealistic 8k artwork of {prompt}, divine golden lighting, National Geographic style")
-    pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&seed={seed}"
+    for attempt in range(2):
+        seed = random.randint(1, 999999)
+        encoded_prompt = urllib.parse.quote(f"Photorealistic 8k artwork of {prompt}, divine golden lighting, National Geographic style")
+        pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true&enhance=true&seed={seed}"
 
-    try:
-        response = requests.get(pollinations_url, stream=True, headers=headers, timeout=14)
-        if response.status_code == 200 and len(response.content) > 10000:
-            with open(temp_jpg, 'wb') as f:
-                for chunk in response.iter_content(1024):
-                    f.write(chunk)
-            print("Successfully generated fresh photorealistic AI background image via Pollinations engine!")
-            return temp_jpg
-    except Exception as e:
-        print(f"Pollinations AI backup notice ({e})")
+        try:
+            response = requests.get(pollinations_url, stream=True, headers=headers, timeout=25)
+            if response.status_code == 200 and len(response.content) > 10000:
+                with open(temp_jpg, 'wb') as f:
+                    for chunk in response.iter_content(1024):
+                        f.write(chunk)
+                print("Successfully generated fresh photorealistic AI background image!")
+                return temp_jpg
+        except Exception as e:
+            print(f"Image engine attempt {attempt+1} notice ({e})")
+            time.sleep(2)
 
     return None
 
