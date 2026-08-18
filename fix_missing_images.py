@@ -28,10 +28,14 @@ def safe_generate_content(prompt):
         return None
 
     models_to_try = [
+        'gemini-2.5-flash',
         'gemini-2.5-flash-lite',
-        'gemini-3.6-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro',
         'gemini-flash-latest'
     ]
+    last_error = None
+
     for model in models_to_try:
         for attempt in range(3):
             try:
@@ -43,8 +47,10 @@ def safe_generate_content(prompt):
                     return response.text
             except Exception as e:
                 err_msg = str(e)
+                last_error = e
+                print(f"Warning: Model {model} attempt {attempt+1} failed: {err_msg[:120]}")
                 if any(k in err_msg for k in ['429', '503', 'RESOURCE_EXHAUSTED', 'UNAVAILABLE', 'quota']):
-                    time.sleep(2 * (attempt + 1))
+                    time.sleep(6 * (attempt + 1))
                 else:
                     break
     return None
