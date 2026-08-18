@@ -100,55 +100,59 @@ def apply_smart_logo_watermark(image_path, output_path=None):
 
 def search_internet_for_real_photo(text):
     """
-    Dynamically extracts key entities (persons, places, temples, real events)
-    from ANY title or prompt and searches open internet media (Wikipedia/Wikimedia) FIRST.
-    Returns local file path if a high-res real photo is found, else None.
+    Searches open internet media (Wikipedia/Wikimedia) ONLY for verified physical temples,
+    pilgrimages, and public figures. Never searches for astrology, metaphors, or generic keywords.
     """
-    import re
-    boilerplate = {
-        'news', 'today', '2026', '2025', 'sacred', 'divine', 'cosmic', 'unlocks',
-        'revealed', 'begins', 'journey', 'final', 'phase', 'harness', 'power',
-        'confluence', 'honors', 'secret', 'secrets', 'exclusive', 'special', 'updates'
-    }
-    words = text.replace(':', ' ').replace('-', ' ').replace(',', ' ').replace("'", "").split()
-    candidates = []
-    
-    # 1. Capitalized multi-word entities (Persons, Places, Temples, Events)
-    entities = re.findall(r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)', text)
-    for ent in entities:
-        clean_ent = ' '.join([w for w in ent.split() if w.lower() not in boilerplate])
-        if clean_ent and clean_ent not in candidates:
-            candidates.append(clean_ent)
-            
-    # 2. Main title clean multi-word queries
-    clean_terms = [w for w in words if w.lower() not in boilerplate and len(w) > 3]
-    if len(clean_terms) >= 2:
-        candidates.append(' '.join(clean_terms[:3]))
-        
-    # 3. Individual significant capitalized names
-    for w in words:
-        if len(w) > 4 and w[0].isupper() and w.lower() not in boilerplate and w not in candidates:
-            candidates.append(w)
-            
+    text_lower = text.lower()
+
+    # 1. Physical Temples, Shrines & Pilgrimages
+    known_landmarks = [
+        "amarnath", "kedarnath", "badrinath", "somnath", "kashi vishwanath", "ayodhya ram mandir",
+        "ram mandir", "tirupati balaji", "puri jagannath", "meenakshi temple", "kamakhya temple",
+        "vaishno devi", "har ki pauri", "varanasi ghats", "mahakaleshwar", "trimbakeshwar",
+        "omkareshwar", "rameshwaram", "dwarka", "akshardham", "kanwar yatra", "kumbh mela"
+    ]
+
+    # 2. Real Living / Historical Figures & Gurus
+    known_people = [
+        "yogi adityanath", "narendra modi", "dhirendra shastri", "bageshwar dham", "shankaracharya",
+        "swami vivekananda", "sadhguru", "baba ramdev", "premanand ji maharaj", "sri sri ravi shankar"
+    ]
+
+    target_query = None
+    for landmark in known_landmarks:
+        if landmark in text_lower:
+            target_query = landmark.title()
+            break
+
+    if not target_query:
+        for person in known_people:
+            if person in text_lower:
+                target_query = person.title()
+                break
+
+    if not target_query:
+        return None
+
     headers = {'User-Agent': 'HinduDevGyan/2.0 (info@hindudevgyan.in)'}
-    for q in candidates:
-        try:
-            url = f"https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch={urllib.parse.quote(q)}&gsrlimit=3&prop=pageimages&pithumbsize=1280&format=json"
-            res = requests.get(url, headers=headers, timeout=10)
-            if res.status_code == 200:
-                pages = res.json().get("query", {}).get("pages", {})
-                for pid, p in sorted(pages.items(), key=lambda x: x[1].get('index', 99)):
-                    if "thumbnail" in p and "source" in p["thumbnail"]:
-                        img_url = p["thumbnail"]["source"]
-                        img_data = requests.get(img_url, headers=headers, timeout=15).content
-                        if len(img_data) > 20000:
-                            temp_file = "temp_real_media.jpg"
-                            with open(temp_file, "wb") as f:
-                                f.write(img_data)
-                            print(f"[OK] Found authentic real photo for '{q}' ({p.get('title')}) from internet repository")
-                            return temp_file
-        except Exception:
-            continue
+    try:
+        url = f"https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch={urllib.parse.quote(target_query)}&gsrlimit=3&prop=pageimages&pithumbsize=1280&format=json"
+        res = requests.get(url, headers=headers, timeout=10)
+        if res.status_code == 200:
+            pages = res.json().get("query", {}).get("pages", {})
+            for pid, p in sorted(pages.items(), key=lambda x: x[1].get('index', 99)):
+                if "thumbnail" in p and "source" in p["thumbnail"]:
+                    img_url = p["thumbnail"]["source"]
+                    img_data = requests.get(img_url, headers=headers, timeout=15).content
+                    if len(img_data) > 20000:
+                        temp_file = "temp_real_media.jpg"
+                        with open(temp_file, "wb") as f:
+                            f.write(img_data)
+                        print(f"[OK] Found authentic real photo for landmark/figure: '{target_query}' ({p.get('title')})")
+                        return temp_file
+    except Exception as e:
+        print(f"Internet photo search exception: {e}")
+
     return None
 
 
@@ -172,14 +176,13 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
             except Exception: pass
         return watermarked
 
-    # ─── STEP 2: CLASSICAL TRADITIONAL ART INJECTION (ZERO DISCONNECT LOOK) ───
-    # Wraps spiritual topics in the timeless, revered Raja Ravi Varma / vintage oleograph aesthetic
+    # ─── STEP 2: 2026 ULTRA-HD CINEMATIC SPIRITUAL VISUAL ENGINE ───
+    # Ultra-crisp 8K, modern spiritual realism, cinematic lighting, vibrant natural dynamic range
     refined_prompt = (
-        f"A beautifully detailed vintage Indian oleograph painting of {prompt_text}. "
-        f"In the distinct artistic style of a classic Raja Ravi Varma oil press painting, traditional calendar art, "
-        f"rich authentic Indian color palette, soft warm glowing temple lighting, divine serene atmosphere, "
-        f"historical lithograph texture, museum-quality composition. "
-        f"Strictly no modern 3D rendering, no digital fantasy art styles, no anime illustration, no text overlay."
+        f"Ultra-HD 8k cinematic masterpiece of {prompt_text}. "
+        f"Modern high-end spiritual realism, ethereal volumetric lighting, crystal-clear details, "
+        f"vibrant natural color grading, IMAX 70mm cinematic composition, sharp focus, breathtaking atmosphere, "
+        f"unreal engine 5 architectural render fidelity. Strictly no text overlay, no watermarks, no distorted anatomy."
     )
 
     # ─── TIER 1: CLOUDFLARE WORKERS AI (FLUX.1-schnell) ───

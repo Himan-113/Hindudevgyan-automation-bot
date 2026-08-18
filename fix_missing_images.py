@@ -62,17 +62,17 @@ def generate_high_quality_image_prompt(headline, article_text="", category_name=
     Category: "{category_name}"
     Context: "{clean_context}"
 
-    Task: Create a highly relevant, distinct visual scene composition prompt for this specific article.
+    Task: Create a highly relevant, distinct 2026 cinematic visual scene prompt for this specific article.
     STRICT ICONOGRAPHY RULES:
     1. If a REAL PHYSICAL TEMPLE / LANDMARK is mentioned (e.g., Amarnath, Kedarnath, Badrinath, Somnath, Ayodhya, Kashi, Ujjain, Vrindavan, Tirupati, Puri):
-       - State the physical architecture clearly (e.g., "The ancient stone structures of Kedarnath temple facade").
+       - State the majestic physical architecture clearly (e.g., "The majestic Himalayan Kedarnath temple facade with snow peaks").
     2. If PANCHANG, NAKSHATRA, or HOROSCOPE:
-       - Describe traditional physical objects like ancient Sanskrit palm-leaf manuscripts, antique brass astronomical tools, and an earthen lamp glowing on a wooden table.
+       - Describe glowing celestial nebulae, radiant cosmic constellations, and an ancient Sanskrit manuscript on a carved wooden altar.
     3. If FESTIVAL & VRAT (e.g. Janmashtami, Diwali, Navratri, Shivratri):
-       - Describe festive elements like a polished brass puja thali with fresh flowers, organic fruits, a decorated copper kalash, and glowing oil diyas.
+       - Describe vibrant festive elements: polished brass puja thali with fresh flowers, glowing oil diyas, and sacred offerings.
     4. If A SPECIFIC DEITY (Lord Shiva, Lord Krishna, Lord Rama, Hanuman, Ganesha, Maa Durga):
-       - Describe that specific deity authentically focusing on classical postures and iconic physical objects (e.g. "Lord Shiva seated in deep calm meditation on a rocky cliff under a sacred tree with his trishul nearby").
-    5. CRITICAL STYLE RESTRICTIONS: Banned terms! Do NOT mention "8k photography", "realistic photo", "realistic", "hyperrealistic", "3D render", "digital art", or "National Geographic". Simply describe the concrete, real-world physical subjects and traditional setting.
+       - Describe that specific deity in a serene divine posture with glowing ethereal aura and iconic sacred symbols (flute, trishul, bow).
+    5. CRITICAL RESTRICTIONS: Describe only concrete physical subjects and ethereal lighting. Strictly NO text, NO letters, NO watermarks.
     6. Keep prompt under 35 words. Return ONLY the prompt string.
     """
     res = safe_generate_content(prompt)
@@ -150,32 +150,19 @@ def enhance_and_fix_posts():
     posts = fetch_all_recent_posts(limit=100)
     print(f"Retrieved {len(posts)} articles.")
 
-    # Phase 1: Identify all posts missing featured images (0 or None)
-    missing_image_posts = [p for p in posts if not p.get('featured_media') or p.get('featured_media') == 0]
-    print(f"\n[!] Found {len(missing_image_posts)} posts with MISSING featured images.")
-
-    # Phase 2: Top 30 posts to upgrade to High-End FLUX + Brand Logo Watermarks
-    top_upgrade_posts = posts[:30]
-    print(f"[*] Selecting top {len(top_upgrade_posts)} recent posts for High-End FLUX Art & Logo Upgrade.\n")
-
-    seen_ids = set()
+    # Process latest posts strictly from top-to-bottom (newest post #1 downwards)
     work_queue = []
-
-    for p in missing_image_posts:
+    seen_ids = set()
+    for p in posts[:40]:
         if p['id'] not in seen_ids:
-            work_queue.append((p, "MISSING_FIX"))
+            work_queue.append(p)
             seen_ids.add(p['id'])
 
-    for p in top_upgrade_posts:
-        if p['id'] not in seen_ids:
-            work_queue.append((p, "QUALITY_UPGRADE"))
-            seen_ids.add(p['id'])
-
-    print(f"Total posts queued for processing: {len(work_queue)}\n")
+    print(f"Total posts queued for processing (starting from newest Post #1): {len(work_queue)}\n")
     auth = (WP_USERNAME, WP_APP_PASSWORD)
     success_count = 0
 
-    for idx, (post, task_type) in enumerate(work_queue, 1):
+    for idx, post in enumerate(work_queue, 1):
         post_id = post['id']
         headline = post['title']['rendered']
         slug = post.get('slug', f'post-{post_id}')
