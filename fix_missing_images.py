@@ -11,10 +11,9 @@ from google import genai
 load_dotenv()
 load_dotenv('reel_engine/.env')
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-FAL_KEY = os.getenv("FAL_KEY")
-WP_URL = os.getenv("WP_URL", "https://hindudevgyan.in")
-WP_USERNAME = os.getenv("WP_USERNAME")
-WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
+WP_URL = os.getenv("WP_URL") or "https://hindudevgyan.in"
+WP_USERNAME = os.getenv("WP_USERNAME") or os.getenv("WORDPRESS_USERNAME") or os.getenv("WP_USER")
+WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD") or os.getenv("WORDPRESS_APP_PASSWORD") or os.getenv("WP_PASSWORD")
 
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
@@ -138,8 +137,13 @@ def enhance_and_fix_posts():
     print("[*] HinduDevGyan High-End Image Refresh & Missing Image Fix Engine")
     print("==================================================================")
     
-    if not all([WP_URL, WP_USERNAME, WP_APP_PASSWORD]):
-        print("ERROR: Missing WordPress credentials in .env file.")
+    global WP_URL, WP_USERNAME, WP_APP_PASSWORD
+    WP_URL = os.getenv("WP_URL") or "https://hindudevgyan.in"
+    WP_USERNAME = os.getenv("WP_USERNAME") or os.getenv("WORDPRESS_USERNAME") or os.getenv("WP_USER")
+    WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD") or os.getenv("WORDPRESS_APP_PASSWORD") or os.getenv("WP_PASSWORD")
+
+    if not WP_USERNAME or not WP_APP_PASSWORD:
+        print(f"ERROR: Missing WordPress credentials. WP_URL: '{WP_URL}', WP_USERNAME: '{WP_USERNAME}', WP_APP_PASSWORD Present: {bool(WP_APP_PASSWORD)}")
         return
 
     print("Step 1: Scanning latest 100 published articles from WordPress...")

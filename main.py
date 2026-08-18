@@ -17,9 +17,9 @@ import pytz
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-WP_URL = os.getenv("WP_URL")
-WP_USERNAME = os.getenv("WP_USERNAME")
-WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD")
+WP_URL = os.getenv("WP_URL") or "https://hindudevgyan.in"
+WP_USERNAME = os.getenv("WP_USERNAME") or os.getenv("WORDPRESS_USERNAME") or os.getenv("WP_USER")
+WP_APP_PASSWORD = os.getenv("WP_APP_PASSWORD") or os.getenv("WORDPRESS_APP_PASSWORD") or os.getenv("WP_PASSWORD")
 
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
