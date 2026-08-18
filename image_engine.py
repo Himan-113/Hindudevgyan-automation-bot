@@ -172,12 +172,14 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
             except Exception: pass
         return watermarked
 
-    # ─── STEP 2: DYNAMIC FLUX.1 GENERATION (NATURAL VIVID DAYLIGHT AI RENDERING) ───
-    # Enforces natural, vibrant daylight colors without muddy/yellow sepia tint
+    # ─── STEP 2: CLASSICAL TRADITIONAL ART INJECTION (ZERO DISCONNECT LOOK) ───
+    # Wraps spiritual topics in the timeless, revered Raja Ravi Varma / vintage oleograph aesthetic
     refined_prompt = (
-        f"Vivid crisp professional 8k photography of {prompt_text}, "
-        f"bright natural daylight, rich authentic colors, clear atmospheric lighting, "
-        f"true-to-life textures, sharp focus, 35mm Hasselblad masterpiece"
+        f"A beautifully detailed vintage Indian oleograph painting of {prompt_text}. "
+        f"In the distinct artistic style of a classic Raja Ravi Varma oil press painting, traditional calendar art, "
+        f"rich authentic Indian color palette, soft warm glowing temple lighting, divine serene atmosphere, "
+        f"historical lithograph texture, museum-quality composition. "
+        f"Strictly no modern 3D rendering, no digital fantasy art styles, no anime illustration, no text overlay."
     )
 
     # ─── TIER 1: CLOUDFLARE WORKERS AI (FLUX.1-schnell) ───
@@ -190,7 +192,9 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
             }
             payload = {
                 "prompt": refined_prompt,
-                "steps": 4
+                "steps": 4,
+                "height": 768,
+                "width": 1024
             }
             res = requests.post(cf_url, headers=headers, json=payload, timeout=45)
             if res.status_code == 200:
@@ -210,7 +214,7 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
         except Exception as e:
             print(f"Cloudflare FLUX attempt exception: {e}")
 
-    # ─── TIER 2: TOGETHER.AI (FLUX.1-schnell) ───
+    # ─── TIER 2: TOGETHER.AI (FLUX.1-schnell fallback) ───
     if TOGETHER_API_KEY:
         try:
             res = requests.post(
@@ -220,7 +224,7 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
                     "model": "black-forest-labs/FLUX.1-schnell",
                     "prompt": refined_prompt,
                     "width": 1024,
-                    "height": 1024,
+                    "height": 768,
                     "steps": 4,
                     "n": 1
                 },
@@ -236,7 +240,7 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
         except Exception as e:
             print(f"Together.ai fallback exception: {e}")
 
-    # ─── TIER 3: FAL.AI (FLUX.1-schnell) ───
+    # ─── TIER 3: FAL.AI (FLUX.1-schnell fallback) ───
     if FAL_KEY:
         try:
             res = requests.post(
@@ -244,7 +248,7 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
                 headers={"Authorization": f"Key {FAL_KEY}", "Content-Type": "application/json"},
                 json={
                     "prompt": refined_prompt,
-                    "image_size": "square_hd",
+                    "image_size": "landscape_4_3",
                     "num_images": 1
                 },
                 timeout=30

@@ -62,17 +62,17 @@ def generate_high_quality_image_prompt(headline, article_text="", category_name=
     Category: "{category_name}"
     Context: "{clean_context}"
 
-    Task: Create a highly relevant, distinct visual prompt for this specific article.
-    STRICT DIVERSITY RULES:
+    Task: Create a highly relevant, distinct visual scene composition prompt for this specific article.
+    STRICT ICONOGRAPHY RULES:
     1. If a REAL PHYSICAL TEMPLE / LANDMARK is mentioned (e.g., Amarnath, Kedarnath, Badrinath, Somnath, Ayodhya, Kashi, Ujjain, Vrindavan, Tirupati, Puri):
-       - Name the EXACT landmark clearly (e.g., "Amarnath Holy Cave shrine in Kashmir Himalayas with snow mountains" or "Kedarnath Temple Himalayan facade").
+       - State the physical architecture clearly (e.g., "The ancient stone structures of Kedarnath temple facade").
     2. If PANCHANG, NAKSHATRA, or HOROSCOPE:
-       - Describe ancient Sanskrit palm-leaf manuscripts, antique brass astronomical sundials (yantras), and glowing crescent moon under starry night sky. (NEVER describe a golden deity statue).
+       - Describe traditional physical objects like ancient Sanskrit palm-leaf manuscripts, antique brass astronomical tools, and an earthen lamp glowing on a wooden table.
     3. If FESTIVAL & VRAT (e.g. Janmashtami, Diwali, Navratri, Shivratri):
-       - Describe festive puja thalis with flowers, fresh fruits, decorated brass kalash, and glowing earthen oil diyas.
+       - Describe festive elements like a polished brass puja thali with fresh flowers, organic fruits, a decorated copper kalash, and glowing oil diyas.
     4. If A SPECIFIC DEITY (Lord Shiva, Lord Krishna, Lord Rama, Hanuman, Ganesha, Maa Durga):
-       - Describe that specific deity authentically with their iconic symbols (flute, trishul, bow, gada).
-    5. NEVER repeat the same generic golden idol. Make every image match its exact topic.
+       - Describe that specific deity authentically focusing on classical postures and iconic physical objects (e.g. "Lord Shiva seated in deep calm meditation on a rocky cliff under a sacred tree with his trishul nearby").
+    5. CRITICAL STYLE RESTRICTIONS: Banned terms! Do NOT mention "8k photography", "realistic photo", "realistic", "hyperrealistic", "3D render", "digital art", or "National Geographic". Simply describe the concrete, real-world physical subjects and traditional setting.
     6. Keep prompt under 35 words. Return ONLY the prompt string.
     """
     res = safe_generate_content(prompt)

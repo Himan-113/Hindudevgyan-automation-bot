@@ -313,12 +313,12 @@ def rewrite_article_and_image_prompt(original_title):
        - <h2>Frequently Asked Questions</h2>: 3 crisp Q&A pairs (<h3> and <p>) optimized for Google FAQ Rich Snippets.
     6. Category: Choose ONE from: Festivals & Vrat, Temples & Pilgrimage, Astrology & Horoscope, Vedic Wisdom, Gita Wisdom, Panchang, Mantras & Chants, Mythology, Spiritual News.
     7. Ecommerce Tag: Choose ONE: "shiva", "pooja", "gita", "general".
-    8. Visual AI Image Prompt: A concrete 20-30 word visual scene description for FLUX.1.
-       - Identify the EXACT SACRED ENTITY (Lord Shiva, Lord Krishna, Lord Rama, Hanuman, Ganesha, Maa Durga, Nag Devta, Shani Dev, or sacred Shivling).
-       - If Horoscope: depict the Vedic deity of that sign (e.g., Shani Dev / sacred Kalash for Kumbh/Aquarius; Surya Dev for Leo/Simha) with cosmic golden aura and stars.
-       - If Nag Panchami: depict the sacred Vasuki/Sheshnag serpent crowned around Lord Shiva with Trishul and bilva leaves.
-       - ALWAYS focus on a HEROIC CENTERED PORTRAIT or SANCTUM SANCTORUM with glowing brass oil diyas, temple pillars, and warm golden lighting. NEVER describe abstract concepts (like trophies, alchemy, or modern crowds).
-    9. Image Alt Text: Short descriptive alt text containing primary subject (e.g. "Lord Shiva and Nag Devta in Sawan Somwar puja").
+    8. Visual AI Image Prompt: A concrete, literal 20-30 word visual scene description focusing on traditional Hindu iconography and sacred subjects.
+       - If a Deity (Shiva, Krishna, Rama, Ganesha, Hanuman, Durga): describe the deity in a classic calm posture with iconic physical symbols (flute, bow, trishul, lotus).
+       - If Horoscope / Astrology: describe the classical Vedic celestial symbol (e.g. majestic lion in stars for Leo; sacred brass kalash for Aquarius).
+       - If Temple / Ritual / Vrat: describe the physical stone architecture or traditional puja altar with brass diyas and fresh flowers.
+       - CRITICAL STYLE RESTRICTIONS: Do NOT include abstract action words, emotional metaphors, or alphabetic text. NEVER use words like "photography", "3D render", "digital art", or "National Geographic". Describe only concrete physical subjects.
+    9. Image Alt Text: Short descriptive alt text containing primary subject (e.g. "Lord Shiva and sacred Vasuki serpent in meditation").
     10. Short Image Banner Text: 3-5 word concise headline.
     11. SEO Meta: "meta_title" (<60 chars), "meta_description" (<155 chars), and "focus_keyword".
 

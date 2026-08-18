@@ -202,7 +202,7 @@ def generate_new_mantra(target_day, existing_sanskrit_openers):
     10. SEO META:
         - meta_title: Under 60 characters, keyword-front-loaded.
         - meta_description: Under 155 characters. IT MUST START WITH OR CONTAIN the exact Focus Keyword in the first sentence.
-    11. AI Image Prompt: Write a 100% LITERAL visual scene description in ENGLISH focusing on a HEROIC CENTERED PORTRAIT or SANCTUM SANCTORUM of the deity/mantra idol (e.g., "Majestic sacred deity idol placed on an ornate black marble altar with lit brass diya lamps, fresh lotus flowers, warm golden morning light, 8k realistic photography"). CRITICAL: NEVER describe distant crowds or tiny figurines. Always focus directly on the central deity or sacred puja altar. Do NOT include text.
+    11. AI Image Prompt: Write a 100% LITERAL visual scene description in ENGLISH focusing directly on a clean, centralized classical portrait of the deity or scriptural setting (e.g., "A sacred traditional deity idol placed gracefully on an ornate dark marble altar with lit brass diya lamps and fresh lotus flowers"). CRITICAL STYLE RESTRICTIONS: Do NOT describe distant crowds or tiny abstract figurines. Never use words like "photography", "photorealistic", "render", or "3D style". Absolutely no alphabetic text or letters in the prompt. Describe only the central, classic physical subjects.
     12. Image Alt Text: A short literal description of that image containing the Focus Keyword (for Image SEO).
 
     Format EXACTLY as valid JSON, no markdown, no extra text:
