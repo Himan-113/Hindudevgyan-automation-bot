@@ -172,11 +172,12 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
             except Exception: pass
         return watermarked
 
-    # ─── STEP 2: DYNAMIC FLUX.1 GENERATION (NATURAL AI RENDERING) ───
-    # Passes Gemini's context-aware visual prompt directly with photorealistic quality anchors
+    # ─── STEP 2: DYNAMIC FLUX.1 GENERATION (NATURAL VIVID DAYLIGHT AI RENDERING) ───
+    # Enforces natural, vibrant daylight colors without muddy/yellow sepia tint
     refined_prompt = (
-        f"Cinematic 8k photorealistic photography of {prompt_text}, "
-        f"warm sacred lighting, realistic textures, high detail, Hasselblad 8k masterpiece"
+        f"Vivid crisp professional 8k photography of {prompt_text}, "
+        f"bright natural daylight, rich authentic colors, clear atmospheric lighting, "
+        f"true-to-life textures, sharp focus, 35mm Hasselblad masterpiece"
     )
 
     # ─── TIER 1: CLOUDFLARE WORKERS AI (FLUX.1-schnell) ───
@@ -258,18 +259,5 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
         except Exception as e:
             print(f"Fal.ai fallback exception: {e}")
 
-    # ─── TIER 4: POLLINATIONS FLUX FALLBACK ───
-    try:
-        seed = random.randint(1000, 999999)
-        encoded_prompt = urllib.parse.quote(refined_prompt)
-        pollinations_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?model=flux&width=1024&height=1024&nologo=true&seed={seed}"
-        res = requests.get(pollinations_url, stream=True, timeout=30)
-        if res.status_code == 200 and len(res.content) > 10000:
-            with open(temp_raw, "wb") as f:
-                f.write(res.content)
-            print("[OK] Generated image via Pollinations FLUX fallback.")
-            return apply_smart_logo_watermark(temp_raw, output_filename)
-    except Exception as e:
-        print(f"Pollinations fallback exception: {e}")
-
+    print("[ERROR] All High-End FLUX engines failed or reached daily quota limit.")
     return None
