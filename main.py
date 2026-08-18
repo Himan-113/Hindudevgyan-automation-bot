@@ -425,6 +425,41 @@ def upload_image_to_wp(image_path, alt_text=""):
         return None
 
 
+def generate_faq_schema_json(content_html):
+    """
+    Extracts FAQ Q&A from content_html and generates valid JSON-LD FAQPage schema for Google Rich Results & AEO.
+    """
+    import re
+    faqs = re.findall(r'<h3>(.*?)</h3>\s*<p>(.*?)</p>', content_html)
+    if not faqs:
+        return ""
+
+    faq_elements = []
+    for q, a in faqs[:5]:
+        clean_q = re.sub(r'<[^>]+>', '', q).strip()
+        clean_a = re.sub(r'<[^>]+>', '', a).strip()
+        if clean_q and clean_a and ('?' in clean_q or 'क' in clean_q):
+            faq_elements.append({
+                "@type": "Question",
+                "name": clean_q,
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": clean_a
+                }
+            })
+
+    if not faq_elements:
+        return ""
+
+    schema_dict = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": faq_elements
+    }
+
+    return f'\n<script type="application/ld+json">\n{json.dumps(schema_dict, ensure_ascii=False, indent=2)}\n</script>\n'
+
+
 def publish_wp_post(data, media_id, category_id, slug, meta_title, meta_description, focus_keyword):
     print("Phase 5: Publishing flawless AI post to WordPress...")
     post_url = f"{WP_URL}/wp-json/wp/v2/posts"
@@ -443,9 +478,14 @@ def publish_wp_post(data, media_id, category_id, slug, meta_title, meta_descript
         paragraphs2.insert(mid_idx, get_whatsapp_cta_html())
     full_content = '</p>'.join(paragraphs2)
 
-    # Append Kundli upsell + Affiliate at the end
+    # Append Kundli upsell + Affiliate + JSON-LD FAQ Schema for GEO/AEO
     full_content += get_kundli_upsell_html()
     full_content += get_affiliate_html(data.get('ecommerce_tag', 'general'))
+
+    # Inject Structured FAQ Schema for Google AI Overviews & RankMath
+    faq_schema = generate_faq_schema_json(data['content'])
+    if faq_schema:
+        full_content += faq_schema
 
     payload = {
         "title": data['headline'],

@@ -165,25 +165,16 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
     4. Applies snug HinduDevGyan logo watermark and converts to WebP.
     """
     print(f"\n[Image Engine] Processing Visual for: '{prompt_text[:60]}...'")
-    temp_raw = "temp_raw_gen.jpg"
-
-    # ─── STEP 1: SEARCH OPEN INTERNET MEDIA FIRST ───
-    real_photo = search_internet_for_real_photo(prompt_text)
-    if real_photo and os.path.exists(real_photo):
-        watermarked = apply_smart_logo_watermark(real_photo, output_filename)
-        if real_photo != output_filename:
-            try: os.remove(real_photo)
-            except Exception: pass
-        return watermarked
-
-    # ─── STEP 2: 2026 ULTRA-HD CINEMATIC SPIRITUAL VISUAL ENGINE ───
-    # Ultra-crisp 8K, modern spiritual realism, cinematic lighting, vibrant natural dynamic range
+    # ─── DIRECT 2026 ULTRA-HD FLUX.1 VISUAL ENGINE ───
+    # Generates 100% bespoke, stunning 8K cinematic spiritual art for every article (NO random Wikipedia photos)
     refined_prompt = (
         f"Ultra-HD 8k cinematic masterpiece of {prompt_text}. "
         f"Modern high-end spiritual realism, ethereal volumetric lighting, crystal-clear details, "
         f"vibrant natural color grading, IMAX 70mm cinematic composition, sharp focus, breathtaking atmosphere, "
         f"unreal engine 5 architectural render fidelity. Strictly no text overlay, no watermarks, no distorted anatomy."
     )
+
+    temp_raw = "temp_raw_gen.jpg"
 
     # ─── TIER 1: CLOUDFLARE WORKERS AI (FLUX.1-schnell) ───
     if CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN:

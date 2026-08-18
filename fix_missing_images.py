@@ -187,7 +187,7 @@ def enhance_and_fix_posts():
         final_webp = f"{slug}-hq.webp"
         from image_engine import generate_hd_featured_image
         branded_image = generate_hd_featured_image(
-            prompt_text=f"{headline}. {hq_prompt}",
+            prompt_text=hq_prompt,
             category=category_name,
             output_filename=final_webp
         )
