@@ -186,7 +186,10 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
             from google import genai
             from google.genai import types
 
-            if gemini_key:
+            # Prioritize Account B Vertex AI for Image Generation (Uses the ₹28,000 Credit Balance)
+            if gcp_project and (os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv("GCP_SA_KEY")):
+                client = genai.Client(vertexai=True, project=gcp_project, location=os.getenv("GCP_LOCATION", "us-central1"))
+            elif gemini_key:
                 client = genai.Client(api_key=gemini_key)
             elif gcp_project:
                 client = genai.Client(vertexai=True, project=gcp_project, location=os.getenv("GCP_LOCATION", "us-central1"))

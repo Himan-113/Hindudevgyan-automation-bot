@@ -21,9 +21,21 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Setup Google Cloud Service Account (if present)
+        if: "${{ secrets.GCP_SA_KEY != '' }}"
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          echo "$GCP_SA_KEY" | base64 --decode > vertex_sa_key.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=vertex_sa_key.json" >> $GITHUB_ENV
+          echo "GCP_LOCATION=us-central1" >> $GITHUB_ENV
+
       - name: Run Mantra Pool Growth Bot
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_LOCATION: "us-central1"
+          TOGETHER_API_KEY: ${{ secrets.TOGETHER_API_KEY }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           WP_URL: ${{ secrets.WP_URL }}

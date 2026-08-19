@@ -173,7 +173,9 @@ def enhance_and_fix_posts():
         post_id = post['id']
         headline = post['title']['rendered']
         slug = post.get('slug', f'post-{post_id}')
-        
+
+        print(f"\n[{idx}/{len(work_queue)}] Processing Post #{post_id}: '{headline[:60]}'", flush=True)
+
         category_name = "SPIRITUAL WISDOM"
         if '_embedded' in post and 'wp:term' in post['_embedded']:
             terms = post['_embedded']['wp:term']
@@ -183,8 +185,8 @@ def enhance_and_fix_posts():
         # 1. Generate Context-Aware Visual Prompt from Title + Article Body + Category
         post_content = post.get('content', {}).get('rendered', '')
         hq_prompt = generate_high_quality_image_prompt(headline, article_text=post_content, category_name=category_name)
-        
-        # 2. Smart Hybrid Visual Engine: Real photo if landmark, else 8K FLUX + Snug Watermark
+
+        # 2. Smart 2026 Visual Engine: 8K FLUX / Imagen + Snug Watermark
         final_webp = f"{slug}-hq.webp"
         from image_engine import generate_hd_featured_image
         branded_image = generate_hd_featured_image(
@@ -193,23 +195,23 @@ def enhance_and_fix_posts():
             output_filename=final_webp
         )
         if not branded_image or not os.path.exists(branded_image):
-            print("  -> Skipped (Failed to generate image).")
+            print("  -> Skipped (Failed to generate image).", flush=True)
             continue
 
         # 4. Upload to WordPress Media Library
         media_id = upload_image_to_wp(branded_image, alt_text=headline)
         if not media_id:
-            print("  -> Skipped (Upload failed).")
+            print("  -> Skipped (Upload failed).", flush=True)
             continue
 
         # 5. Attach new Featured Media to Post
         update_url = f"{WP_URL}/wp-json/wp/v2/posts/{post_id}"
         res = requests.post(update_url, json={"featured_media": media_id}, auth=auth)
         if res.status_code == 200:
-            print(f"  -> SUCCESS: Attached Branded 8K WebP (Media #{media_id}) to Post #{post_id}!")
+            print(f"  -> SUCCESS: Attached Branded 8K WebP (Media #{media_id}) to Post #{post_id}!", flush=True)
             success_count += 1
         else:
-            print(f"  -> Failed to update post. Status: {res.status_code}")
+            print(f"  -> Failed to update post. Status: {res.status_code}", flush=True)
 
         # Cleanup local file
         if os.path.exists(final_webp):
@@ -218,9 +220,9 @@ def enhance_and_fix_posts():
             except Exception:
                 pass
 
-        time.sleep(3)
+        time.sleep(2)
 
-    print(f"\n[+] ALL DONE! Successfully updated {success_count} posts with High-End Branded 8K Images.")
+    print(f"\n[+] ALL DONE! Successfully updated {success_count} posts with High-End Branded 8K Images.", flush=True)
 
 
 if __name__ == "__main__":
