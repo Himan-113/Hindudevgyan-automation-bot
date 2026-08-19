@@ -232,21 +232,42 @@ def topic_already_covered_on_site(headline):
     return False
 
 
+def fetch_recent_site_headlines():
+    """Fetches the latest 25 published titles from WordPress to prevent repeating topics."""
+    auth = (WP_USERNAME, WP_APP_PASSWORD)
+    try:
+        url = f"{WP_URL}/wp-json/wp/v2/posts?per_page=25&_fields=title"
+        res = requests.get(url, auth=auth, timeout=10)
+        if res.status_code == 200:
+            posts = res.json()
+            return [p['title']['rendered'] for p in posts if 'title' in p]
+    except Exception as e:
+        print(f"Warning: Could not fetch recent site headlines: {e}")
+    return []
+
+
 def deduplicate_and_select(raw_news):
     print(f"Phase 2: Editor-in-Chief AI analyzing {len(raw_news)} raw headlines for semantic deduplication...")
+
+    already_published = fetch_recent_site_headlines()
+    published_summary = "\n".join([f"- {t}" for t in already_published[:15]])
 
     headlines_text = ""
     for i, news in enumerate(raw_news):
         headlines_text += f"{i}. {news['title']} (Source: {news['source']})\n"
 
     prompt = f"""
-    You are the elite Editor-in-Chief of a premium Hindu Spirituality news portal.
-    Below are trending headlines from various Indian news networks. Many cover the EXACT SAME EVENT.
+    You are the elite Editor-in-Chief of HinduDevGyan, a viral Vedic & Hindu Spirituality portal.
+    Below are trending raw headlines from Indian news networks. Many cover the EXACT SAME EVENT.
+
+    ALREADY PUBLISHED ON OUR SITE (DO NOT REPEAT ANY OF THESE TOPICS):
+    {published_summary if published_summary else "None"}
 
     Your Task:
-    1. Semantically group all duplicates (e.g., if Zee and ABP both report on a specific temple, count it as one story).
-    2. Select the 3 most distinct, high-impact, and trending religious/spiritual topics from this list.
-    3. Return ONLY a JSON array of 3 objects containing the original title and link of the chosen stories.
+    1. STRICTLY EXCLUDE any story that covers the same deity, festival, or theme as the 'ALREADY PUBLISHED' list above (e.g. if Nag Panchami or Sawan Fast was published, DO NOT select it again!).
+    2. Semantically group all duplicates in the raw headlines.
+    3. Select 3 completely DISTINCT, high-CTR, fresh, and viral topics (e.g., Temple travel itineraries, temple mysteries, planetary remedies, or unexplored spiritual news).
+    4. Return ONLY a JSON array of 3 objects containing the original title and link of the chosen stories.
 
     Raw Headlines:
     {headlines_text}

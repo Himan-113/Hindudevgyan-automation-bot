@@ -165,16 +165,69 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
     4. Applies snug HinduDevGyan logo watermark and converts to WebP.
     """
     print(f"\n[Image Engine] Processing Visual for: '{prompt_text[:60]}...'")
-    # ─── DIRECT 2026 ULTRA-HD FLUX.1 VISUAL ENGINE ───
-    # Generates 100% bespoke, stunning 8K cinematic spiritual art for every article (NO random Wikipedia photos)
+    # ─── DIRECT 2026 ULTRA-HD FLUX.1 & GEMINI IMAGE ENGINE ───
+    # Generates 100% bespoke, stunning 8K cinematic spiritual art with HinduDevGyan signature color harmony
     refined_prompt = (
-        f"Ultra-HD 8k cinematic masterpiece of {prompt_text}. "
+        f"Ultra-HD 8k cinematic spiritual masterpiece of {prompt_text}. "
         f"Modern high-end spiritual realism, ethereal volumetric lighting, crystal-clear details, "
-        f"vibrant natural color grading, IMAX 70mm cinematic composition, sharp focus, breathtaking atmosphere, "
+        f"harmonious Vedic color palette with radiant saffron gold, warm amber illumination, and deep cosmic indigo accents, "
+        f"IMAX 70mm cinematic composition, sharp focus, breathtaking atmosphere, "
         f"unreal engine 5 architectural render fidelity. Strictly no text overlay, no watermarks, no distorted anatomy."
     )
 
     temp_raw = "temp_raw_gen.jpg"
+
+    # ─── TIER 0: GOOGLE GEMINI 2.5 FLASH IMAGE & VERTEX AI / IMAGEN 3 ENGINE ───
+    gcp_project = os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("PROJECT_ID")
+    gemini_key = os.getenv("GEMINI_API_KEY")
+
+    if gcp_project or gemini_key:
+        try:
+            from google import genai
+            from google.genai import types
+
+            if gcp_project:
+                client = genai.Client(vertexai=True, project=gcp_project, location=os.getenv("GCP_LOCATION", "global"))
+            else:
+                client = genai.Client(api_key=gemini_key)
+
+            # Try Gemini 2.5 Flash Image first
+            try:
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash-image',
+                    contents=refined_prompt,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["TEXT", "IMAGE"],
+                        candidate_count=1,
+                    )
+                )
+                if response and response.candidates:
+                    for part in response.candidates[0].content.parts:
+                        if hasattr(part, 'inline_data') and part.inline_data:
+                            img_bytes = part.inline_data.data
+                            with open(temp_raw, "wb") as f:
+                                f.write(img_bytes)
+                            print("[OK] Successfully generated image via Google Gemini 2.5 Flash Image (Vertex AI)!")
+                            return apply_smart_logo_watermark(temp_raw, output_filename)
+            except Exception as e_flash:
+                print(f"Gemini 2.5 Flash Image note: {e_flash}")
+                # Fallback to Imagen 3
+                try:
+                    res_img = client.models.generate_images(
+                        model='imagen-3.0-generate-002',
+                        prompt=refined_prompt,
+                        config=dict(number_of_images=1, aspect_ratio="4:3")
+                    )
+                    if res_img and res_img.generated_images:
+                        img_bytes = res_img.generated_images[0].image.image_bytes
+                        with open(temp_raw, "wb") as f:
+                            f.write(img_bytes)
+                        print("[OK] Successfully generated image via Google Imagen 3!")
+                        return apply_smart_logo_watermark(temp_raw, output_filename)
+                except Exception as e_imagen:
+                    print(f"Google Imagen 3 attempt note: {e_imagen}")
+        except Exception as e_google:
+            print(f"Google Image Engine exception: {e_google}")
 
     # ─── TIER 1: CLOUDFLARE WORKERS AI (FLUX.1-schnell) ───
     if CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN:

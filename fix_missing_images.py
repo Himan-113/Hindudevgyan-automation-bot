@@ -156,15 +156,16 @@ def enhance_and_fix_posts():
     posts = fetch_all_recent_posts(limit=100)
     print(f"Retrieved {len(posts)} articles.")
 
-    # Process latest posts strictly from top-to-bottom (newest post #1 downwards)
+    # Skip the first 31 manually updated posts and process strictly from Post #32 to Post #100
+    start_index = int(os.getenv("FIX_START_INDEX", "31"))
     work_queue = []
     seen_ids = set()
-    for p in posts[:40]:
+    for p in posts[start_index:100]:
         if p['id'] not in seen_ids:
             work_queue.append(p)
             seen_ids.add(p['id'])
 
-    print(f"Total posts queued for processing (starting from newest Post #1): {len(work_queue)}\n")
+    print(f"Total posts queued for processing (Starting from Post #{start_index+1} onwards): {len(work_queue)}\n")
     auth = (WP_USERNAME, WP_APP_PASSWORD)
     success_count = 0
 
