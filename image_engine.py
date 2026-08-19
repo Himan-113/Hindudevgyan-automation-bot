@@ -186,10 +186,12 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
             from google import genai
             from google.genai import types
 
-            if gcp_project:
-                client = genai.Client(vertexai=True, project=gcp_project, location=os.getenv("GCP_LOCATION", "global"))
-            else:
+            if gemini_key:
                 client = genai.Client(api_key=gemini_key)
+            elif gcp_project:
+                client = genai.Client(vertexai=True, project=gcp_project, location=os.getenv("GCP_LOCATION", "us-central1"))
+            else:
+                client = None
 
             # Try Gemini 2.5 Flash Image first
             try:
