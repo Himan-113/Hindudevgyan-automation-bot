@@ -204,6 +204,15 @@ def enhance_and_fix_posts():
             output_filename=final_webp
         )
         if not branded_image or not os.path.exists(branded_image):
+            print("  -> Retrying after 4s...", flush=True)
+            time.sleep(4)
+            branded_image = generate_hd_featured_image(
+                prompt_text=headline,
+                category=category_name,
+                output_filename=final_webp
+            )
+
+        if not branded_image or not os.path.exists(branded_image):
             print("  -> Skipped (Failed to generate image).", flush=True)
             continue
 
@@ -229,7 +238,7 @@ def enhance_and_fix_posts():
             except Exception:
                 pass
 
-        time.sleep(2)
+        time.sleep(3)
 
     print(f"\n[+] ALL DONE! Successfully updated {success_count} posts with High-End Branded 8K Images.", flush=True)
 
