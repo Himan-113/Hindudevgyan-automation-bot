@@ -195,15 +195,11 @@ def enhance_and_fix_posts():
             if terms and len(terms) > 0 and len(terms[0]) > 0:
                 category_name = terms[0][0].get('name', 'SPIRITUAL WISDOM')
 
-        # 1. Generate Context-Aware Visual Prompt from Title + Article Body + Category
-        post_content = post.get('content', {}).get('rendered', '')
-        hq_prompt = generate_high_quality_image_prompt(headline, article_text=post_content, category_name=category_name)
-
-        # 2. Smart 2026 Visual Engine: 8K FLUX / Imagen + Snug Watermark
+        # Pass headline directly to Google Vertex AI
         final_webp = f"{slug}-hq.webp"
         from image_engine import generate_hd_featured_image
         branded_image = generate_hd_featured_image(
-            prompt_text=hq_prompt,
+            prompt_text=headline,
             category=category_name,
             output_filename=final_webp
         )

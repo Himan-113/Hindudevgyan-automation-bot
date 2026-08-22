@@ -100,19 +100,12 @@ def apply_smart_logo_watermark(image_path, output_path=None):
 
 def generate_hd_featured_image(prompt_text, category="Spiritual News", output_filename="featured_image.webp", temple_keyword=""):
     """
-    Enterprise 2026 Pure Vertex AI Visual Pipeline:
-    1. Generates bespoke Ultra-HD 8K cinematic spiritual art directly via Google Cloud Vertex AI (Imagen 3 / Gemini 2.5 Flash Image).
-    2. Uses your ₹28,000 promotional balance.
-    3. Applies signature snug HinduDevGyan logo watermark badge and converts to WebP.
+    Direct clean prompt to Google Vertex AI Gemini / Imagen (Uses ₹28,000 credit balance)
     """
-    print(f"\n[Vertex AI Image Engine] Processing 2026 Visual for: '{prompt_text[:60]}...'")
-    refined_prompt = (
-        f"Ultra-HD 8k cinematic spiritual masterpiece of {prompt_text}. "
-        f"Modern high-end spiritual realism, ethereal volumetric lighting, crystal-clear details, "
-        f"harmonious Vedic color palette with radiant saffron gold, warm amber illumination, and deep cosmic indigo accents, "
-        f"IMAX 70mm cinematic composition, sharp focus, breathtaking atmosphere, "
-        f"unreal engine 5 architectural render fidelity. Strictly no text overlay, no watermarks, no distorted anatomy."
-    )
+    print(f"\n[Vertex AI Image Engine] Generating image for: '{prompt_text}'")
+    
+    # Simple, direct, beautiful spiritual command
+    clean_prompt = f"A beautiful, sacred, high quality divine Hindu spiritual featured image for: {prompt_text}"
 
     temp_raw = "temp_raw_gen.jpg"
 
@@ -142,7 +135,7 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
             try:
                 res_img = client.models.generate_images(
                     model='imagen-3.0-generate-002',
-                    prompt=refined_prompt,
+                    prompt=clean_prompt,
                     config=dict(number_of_images=1, aspect_ratio="16:9")
                 )
                 if res_img and res_img.generated_images:
@@ -158,7 +151,7 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
             try:
                 response = client.models.generate_content(
                     model='gemini-2.5-flash-image',
-                    contents=refined_prompt,
+                    contents=clean_prompt,
                     config=types.GenerateContentConfig(
                         response_modalities=["IMAGE"],
                         candidate_count=1,
