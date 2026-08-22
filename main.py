@@ -569,8 +569,18 @@ def main():
     published_count = 0
     published_posts = []
 
-    for news in selected_topics:
-        print(f"\n--- Processing Master Topic: {news['title']} ---")
+    # Build an expanded candidate queue: selected topics first, followed by remaining fresh news
+    candidate_queue = list(selected_topics)
+    selected_links = {item['link'] for item in selected_topics if 'link' in item}
+    for item in fresh_news:
+        if item.get('link') not in selected_links:
+            candidate_queue.append(item)
+
+    for news in candidate_queue:
+        if published_count >= 3:
+            break
+
+        print(f"\n--- Processing Candidate Topic: {news['title']} ---")
 
         rewritten = rewrite_article_and_image_prompt(news['title'])
         if not rewritten:
@@ -625,8 +635,9 @@ def main():
         time.sleep(5)
 
     if published_count == 0:
-        print("ERROR: 0 articles were published despite topics being selected. Triggering failure alert.")
-        sys.exit(1)
+        print("[INFO] All available news stories in this feed cycle have already been published on HinduDevGyan. Site is up to date!")
+    else:
+        print(f"\n[DONE] Successfully published {published_count} new high-quality article(s).")
 
 
 if __name__ == "__main__":

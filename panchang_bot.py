@@ -87,17 +87,17 @@ def already_published_today():
     url = f"{WP_URL}/wp-json/wp/v2/posts"
     params = {"after": start_of_day_utc_iso, "per_page": 30, "_fields": "title"}
     try:
-        res = requests.get(url, params=params, auth=auth)
+        res = requests.get(url, params=params, auth=auth, timeout=12)
         if res.status_code == 200:
-            keywords = ["panchang", "horoscope", "nakshatra", "tithi"]
+            strict_keywords = ["daily panchang", "aaj ka panchang", "today's panchang", "shubh panchang", "today panchang"]
             for post in res.json():
                 title = post.get("title", {}).get("rendered", "").lower()
-                if any(k in title for k in keywords):
-                    print(f"Found existing post today: {post.get('title', {}).get('rendered')}")
+                if any(k in title for k in strict_keywords):
+                    print(f"Found existing Daily Panchang post today: {post.get('title', {}).get('rendered')}")
                     return True
     except Exception as e:
-        print(f"Could not check WordPress for existing posts (continuing cautiously): {e}")
-        return True
+        print(f"Could not check WordPress for existing posts (continuing to publish): {e}")
+        return False
     return False
 
 
