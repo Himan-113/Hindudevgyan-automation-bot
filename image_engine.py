@@ -119,10 +119,23 @@ def apply_smart_logo_watermark(image_path, output_path=None):
         raw_img = Image.open(image_path).convert("RGBA")
         trimmed_img = _trim_black_bars(raw_img)
         
-        # Enforce full edge-to-edge 16:9 widescreen canvas
+        # Enforce proportional 16:9 widescreen canvas without ANY stretching or distortion
         target_w = 1600
         target_h = 900
-        img = trimmed_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+        w, h = trimmed_img.size
+        target_ratio = target_w / target_h
+        current_ratio = w / h
+
+        if current_ratio > target_ratio:
+            new_w = int(h * target_ratio)
+            offset_x = (w - new_w) // 2
+            cropped = trimmed_img.crop((offset_x, 0, offset_x + new_w, h))
+        else:
+            new_h = int(w / target_ratio)
+            offset_y = (h - new_h) // 2
+            cropped = trimmed_img.crop((0, offset_y, w, offset_y + new_h))
+
+        img = cropped.resize((target_w, target_h), Image.Resampling.LANCZOS)
         width, height = target_w, target_h
 
         if os.path.exists(LOGO_PATH):
