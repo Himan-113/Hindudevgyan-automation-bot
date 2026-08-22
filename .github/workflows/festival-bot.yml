@@ -22,13 +22,14 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Setup Google Cloud Service Account (if present)
-        if: "${{ secrets.GCP_SA_KEY != '' }}"
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
-          echo "$GCP_SA_KEY" | base64 --decode > vertex_sa_key.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=vertex_sa_key.json" >> $GITHUB_ENV
-          echo "GCP_LOCATION=us-central1" >> $GITHUB_ENV
+          if [ -n "$GCP_SA_KEY" ]; then
+            echo "$GCP_SA_KEY" | base64 --decode > vertex_sa_key.json
+            echo "GOOGLE_APPLICATION_CREDENTIALS=vertex_sa_key.json" >> $GITHUB_ENV
+            echo "GCP_LOCATION=us-central1" >> $GITHUB_ENV
+          fi
 
       - name: Run Festival Bot
         env:

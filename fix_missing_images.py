@@ -72,29 +72,33 @@ def generate_high_quality_image_prompt(headline, article_text="", category_name=
         clean_context = re.sub(r'<[^>]+>', ' ', article_text)[:600].strip()
 
     prompt = f"""
-    You are an expert AI Visual Director for a premium Vedic and Hindu media portal.
+    You are the Senior Visual Director for HinduDevGyan, designing 2026 Ultra-HD Divine Spiritual Art.
     Headline: "{headline}"
     Category: "{category_name}"
     Context: "{clean_context}"
 
-    Task: Create a highly relevant, distinct 2026 cinematic visual scene prompt for this specific article.
-    STRICT ICONOGRAPHY RULES:
-    1. If a REAL PHYSICAL TEMPLE / LANDMARK is mentioned (e.g., Amarnath, Kedarnath, Badrinath, Somnath, Ayodhya, Kashi, Ujjain, Vrindavan, Tirupati, Puri):
-       - State the majestic physical architecture clearly (e.g., "The majestic Himalayan Kedarnath temple facade with snow peaks").
-    2. If PANCHANG, NAKSHATRA, or HOROSCOPE:
-       - Describe glowing celestial nebulae, radiant cosmic constellations, and an ancient Sanskrit manuscript on a carved wooden altar.
-    3. If FESTIVAL & VRAT (e.g. Janmashtami, Diwali, Navratri, Shivratri):
-       - Describe vibrant festive elements: polished brass puja thali with fresh flowers, glowing oil diyas, and sacred offerings.
-    4. If A SPECIFIC DEITY (Lord Shiva, Lord Krishna, Lord Rama, Hanuman, Ganesha, Maa Durga):
-       - Describe that specific deity in a serene divine posture with glowing ethereal aura and iconic sacred symbols (flute, trishul, bow).
-    5. CRITICAL RESTRICTIONS: Describe only concrete physical subjects and ethereal lighting. Strictly NO text, NO letters, NO watermarks.
-    6. Keep prompt under 35 words. Return ONLY the prompt string.
+    Task: Create a magnificent, high-CTR visual scene description for Google Imagen 3.
+    CORE VISUAL RULES:
+    1. CENTRAL DIVINE SUBJECT: The image MUST always feature a glorious, radiant Hindu Deity or Grand Sacred Temple. NEVER generate only an inanimate diya, empty altar, or stone wall.
+    2. DEITY PORTRAYAL (Shiva, Krishna, Vishnu, Lakshmi, Ganesha, Rama, Hanuman, Durga):
+       - Depict the deity in a majestic, serene, divine posture with a glowing golden ethereal aura, ornate Vedic crown/jewelry, and sacred attributes (Trishul, Flute, Sudarshana Chakra, Lotus).
+    3. FOR FESTIVALS & VRATS (Ekadashi, Sawan, Raksha Bandhan, Janmashtami, Diwali, Navratri):
+       - Depict the presiding Supreme Deity (e.g. Lord Vishnu & Lakshmi for Ekadashi; Lord Shiva for Sawan Somwar; Lord Krishna for Janmashtami) giving divine blessings with glowing celestial golden light and floating lotus flowers.
+    4. FOR GITA WISDOM & VEDIC PHILOSOPHY:
+       - Depict Lord Krishna in majestic cosmic golden form imparting sacred divine wisdom, with cosmic starlight and radiant glowing aura.
+    5. FOR TEMPLES & PILGRIMAGE:
+       - Depict the grand illuminated temple architecture (e.g. Kedarnath, Kashi, Ayodhya, Somnath) bathed in divine golden sunrise light with snow peaks or sacred river ghats.
+    6. FOR PANCHANG & ASTROLOGY:
+       - Depict Lord Ganesha or Sun God Surya seated gracefully in glowing golden cosmos surrounded by radiant celestial constellations.
+    7. STYLE: Ultra-detailed, 8K resolution, radiant saffron gold, warm amber light, cosmic indigo. Strictly NO text, NO letters, NO modern gadgets.
+
+    Keep prompt under 35 words. Return ONLY the final visual prompt string.
     """
     res = safe_generate_content(prompt)
     if res:
         clean = res.strip().replace('"', '').replace('\n', ' ')
         return clean
-    return f"{headline}"
+    return f"A divine cosmic portrait of Hindu deity in glowing golden ethereal temple setting"
 
 
 def upload_image_to_wp(image_path, alt_text=""):

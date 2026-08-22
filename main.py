@@ -345,12 +345,12 @@ def rewrite_article_and_image_prompt(original_title):
        - <h2>Frequently Asked Questions</h2>: 3 crisp Q&A pairs (<h3> and <p>) optimized for Google FAQ Rich Snippets.
     6. Category: Choose ONE from: Festivals & Vrat, Temples & Pilgrimage, Astrology & Horoscope, Vedic Wisdom, Gita Wisdom, Panchang, Mantras & Chants, Mythology, Spiritual News.
     7. Ecommerce Tag: Choose ONE: "shiva", "pooja", "gita", "general".
-    8. Visual AI Image Prompt: A concrete, literal 20-30 word visual scene description focusing on traditional Hindu iconography and sacred subjects.
-       - If a Deity (Shiva, Krishna, Rama, Ganesha, Hanuman, Durga): describe the deity in a classic calm posture with iconic physical symbols (flute, bow, trishul, lotus).
-       - If Horoscope / Astrology: describe the classical Vedic celestial symbol (e.g. majestic lion in stars for Leo; sacred brass kalash for Aquarius).
-       - If Temple / Ritual / Vrat: describe the physical stone architecture or traditional puja altar with brass diyas and fresh flowers.
-       - CRITICAL STYLE RESTRICTIONS: Do NOT include abstract action words, emotional metaphors, or alphabetic text. NEVER use words like "photography", "3D render", "digital art", or "National Geographic". Describe only concrete physical subjects.
-    9. Image Alt Text: Short descriptive alt text containing primary subject (e.g. "Lord Shiva and sacred Vasuki serpent in meditation").
+    8. Visual AI Image Prompt: A magnificent, 20-30 word visual scene description for Google Imagen 3 featuring a glorious Hindu Deity or Grand Illuminated Sacred Temple.
+       - If a Deity (Shiva, Krishna, Rama, Vishnu, Ganesha, Hanuman, Durga, Lakshmi): describe the deity in a serene divine posture with a glowing golden ethereal aura, ornate Vedic jewels, and sacred attributes (flute, trishul, bow, lotus).
+       - If Horoscope / Astrology / Panchang: describe Lord Ganesha or Sun God Surya seated in a radiant golden cosmic starfield with glowing celestial constellations.
+       - If Temple / Ritual / Vrat: describe the presiding Supreme Deity giving divine blessings amidst floating lotus flowers and glowing golden temple lighting, OR the grand illuminated Himalayan/Vedic temple facade.
+       - CRITICAL STYLE RESTRICTIONS: The central subject MUST be a glorious divine figure or grand temple. NEVER generate an empty room, stone wall, or plain brass lamp alone. Strictly NO text, NO watermarks, NO modern objects.
+    9. Image Alt Text: Short descriptive alt text containing primary subject (e.g. "Lord Shiva and sacred crescent moon in divine meditation").
     10. Short Image Banner Text: 3-5 word concise headline.
     11. SEO Meta: "meta_title" (<60 chars), "meta_description" (<155 chars), and "focus_keyword".
 
