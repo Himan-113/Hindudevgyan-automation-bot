@@ -44,42 +44,86 @@ def _crop_logo_tight(logo_img):
     return logo_img
 
 
+def _trim_black_bars(img):
+    """
+    Scans and automatically crops any letterbox or pillarbox dark borders.
+    """
+    rgb = img.convert('RGB')
+    width, height = rgb.size
+    pixels = rgb.load()
+    
+    # Top & Bottom scan
+    min_y, max_y = 0, height - 1
+    for y in range(height):
+        is_black = True
+        for x in range(int(width * 0.1), int(width * 0.9), 10):
+            r, g, b = pixels[x, y]
+            if r > 28 or g > 28 or b > 28:
+                is_black = False
+                break
+        if not is_black:
+            min_y = y
+            break
+            
+    for y in range(height - 1, -1, -1):
+        is_black = True
+        for x in range(int(width * 0.1), int(width * 0.9), 10):
+            r, g, b = pixels[x, y]
+            if r > 28 or g > 28 or b > 28:
+                is_black = False
+                break
+        if not is_black:
+            max_y = y
+            break
+            
+    # Left & Right scan
+    min_x, max_x = 0, width - 1
+    for x in range(width):
+        is_black = True
+        for y in range(int(height * 0.1), int(height * 0.9), 10):
+            r, g, b = pixels[x, y]
+            if r > 28 or g > 28 or b > 28:
+                is_black = False
+                break
+        if not is_black:
+            min_x = x
+            break
+            
+    for x in range(width - 1, -1, -1):
+        is_black = True
+        for y in range(int(height * 0.1), int(height * 0.9), 10):
+            r, g, b = pixels[x, y]
+            if r > 28 or g > 28 or b > 28:
+                is_black = False
+                break
+        if not is_black:
+            max_x = x
+            break
+            
+    if max_y > min_y + 100 and max_x > min_x + 100:
+        return img.crop((min_x, min_y, max_x + 1, max_y + 1))
+    return img
+
+
 def apply_smart_logo_watermark(image_path, output_path=None):
     """
-    1. Ensures pristine 16:9 Widescreen aspect ratio (prevents WordPress cropping/cutoff).
-    2. Overlays a snug, premium frosted-glass HinduDevGyan logo badge.
-    3. Converts to high-quality 8K WebP.
+    1. Trims all black letterbox borders completely.
+    2. Scales to 16:9 Widescreen (1600x900) full edge-to-edge artwork.
+    3. Overlays logo badge directly inside the top-right corner of the artwork.
+    4. Exports to high-quality 8K WebP.
     """
     if output_path is None:
         output_path = image_path
 
     try:
         raw_img = Image.open(image_path).convert("RGBA")
-        raw_w, raw_h = raw_img.size
-
-        # Enforce 16:9 Widescreen canvas (e.g. 1600 x 900)
+        trimmed_img = _trim_black_bars(raw_img)
+        
+        # Enforce full edge-to-edge 16:9 widescreen canvas
         target_w = 1600
         target_h = 900
-        
-        # Create 16:9 background canvas
-        if abs((raw_w / raw_h) - (16 / 9)) > 0.05:
-            # Ambient blurred background to preserve full original composition without cutoff
-            bg = raw_img.resize((target_w, target_h), Image.Resampling.LANCZOS).filter(ImageFilter.GaussianBlur(radius=25))
-            
-            # Scale raw image to fit height cleanly inside 16:9 canvas
-            scale = min(target_w / raw_w, target_h / raw_h)
-            fit_w = int(raw_w * scale)
-            fit_h = int(raw_h * scale)
-            fitted_img = raw_img.resize((fit_w, fit_h), Image.Resampling.LANCZOS)
-            
-            pos_x = (target_w - fit_w) // 2
-            pos_y = (target_h - fit_h) // 2
-            bg.paste(fitted_img, (pos_x, pos_y), fitted_img)
-            img = bg
-            width, height = target_w, target_h
-        else:
-            img = raw_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
-            width, height = target_w, target_h
+        img = trimmed_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+        width, height = target_w, target_h
 
         if os.path.exists(LOGO_PATH):
             logo_raw = Image.open(LOGO_PATH).convert("RGBA")
