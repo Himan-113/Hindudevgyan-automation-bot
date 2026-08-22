@@ -31,7 +31,7 @@ jobs:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
           if [ -n "$GCP_SA_KEY" ]; then
-            echo "$GCP_SA_KEY" | base64 --decode > vertex_sa_key.json
+            python -c "import os, base64; raw = os.environ['GCP_SA_KEY'].strip(); data = raw.encode('utf-8') if raw.startswith('{') else base64.b64decode(raw); open('vertex_sa_key.json', 'wb').write(data)"
             echo "GOOGLE_APPLICATION_CREDENTIALS=vertex_sa_key.json" >> $GITHUB_ENV
             echo "GCP_LOCATION=us-central1" >> $GITHUB_ENV
           fi
