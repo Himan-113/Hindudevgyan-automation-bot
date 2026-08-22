@@ -131,23 +131,7 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
             client = None
 
         if client:
-            # 1. Primary: Google Imagen 3 (Standard for high-fidelity 16:9 featured images)
-            try:
-                res_img = client.models.generate_images(
-                    model='imagen-3.0-generate-002',
-                    prompt=clean_prompt,
-                    config=dict(number_of_images=1, aspect_ratio="16:9")
-                )
-                if res_img and res_img.generated_images:
-                    img_bytes = res_img.generated_images[0].image.image_bytes
-                    with open(temp_raw, "wb") as f:
-                        f.write(img_bytes)
-                    print("[OK] Successfully generated 2026 Ultra-HD image via Google Imagen 3 (Vertex AI)!")
-                    return apply_smart_logo_watermark(temp_raw, output_filename)
-            except Exception as e_imagen:
-                print(f"[Vertex AI Imagen 3 Attempt Note]: {e_imagen}")
-
-            # 2. Secondary: Gemini 2.5 Flash Image multimodal endpoint
+            # 1. Primary: Google Gemini 2.5 Flash Image (Direct Vertex AI Multimodal Generation)
             try:
                 response = client.models.generate_content(
                     model='gemini-2.5-flash-image',
@@ -167,6 +151,22 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
                             return apply_smart_logo_watermark(temp_raw, output_filename)
             except Exception as e_flash:
                 print(f"[Vertex AI Gemini 2.5 Flash Image Attempt Note]: {e_flash}")
+
+            # 2. Secondary: Google Imagen 3 fallback
+            try:
+                res_img = client.models.generate_images(
+                    model='imagen-3.0-generate-002',
+                    prompt=clean_prompt,
+                    config=dict(number_of_images=1, aspect_ratio="16:9")
+                )
+                if res_img and res_img.generated_images:
+                    img_bytes = res_img.generated_images[0].image.image_bytes
+                    with open(temp_raw, "wb") as f:
+                        f.write(img_bytes)
+                    print("[OK] Successfully generated 2026 Ultra-HD image via Google Imagen 3 (Vertex AI)!")
+                    return apply_smart_logo_watermark(temp_raw, output_filename)
+            except Exception as e_imagen:
+                print(f"[Vertex AI Imagen 3 Attempt Note]: {e_imagen}")
     except Exception as e_google:
         print(f"[Vertex AI Exception]: {e_google}")
 

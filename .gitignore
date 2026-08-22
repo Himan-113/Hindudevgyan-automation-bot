@@ -1,7 +1,10 @@
 .env*
 *.env*
+vertex_sa_key.json
 __pycache__/
 *.jpg
 *.jpeg
 *.png
 !logo.png
+*.webp
+
