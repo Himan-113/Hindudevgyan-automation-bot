@@ -46,33 +46,58 @@ def _crop_logo_tight(logo_img):
 
 def apply_smart_logo_watermark(image_path, output_path=None):
     """
-    Overlays a snug, premium frosted-glass HinduDevGyan logo badge
-    in the top-right corner without blocking central subject matter.
+    1. Ensures pristine 16:9 Widescreen aspect ratio (prevents WordPress cropping/cutoff).
+    2. Overlays a snug, premium frosted-glass HinduDevGyan logo badge.
+    3. Converts to high-quality 8K WebP.
     """
     if output_path is None:
         output_path = image_path
 
     try:
-        img = Image.open(image_path).convert("RGBA")
-        width, height = img.size
+        raw_img = Image.open(image_path).convert("RGBA")
+        raw_w, raw_h = raw_img.size
+
+        # Enforce 16:9 Widescreen canvas (e.g. 1600 x 900)
+        target_w = 1600
+        target_h = 900
+        
+        # Create 16:9 background canvas
+        if abs((raw_w / raw_h) - (16 / 9)) > 0.05:
+            # Ambient blurred background to preserve full original composition without cutoff
+            bg = raw_img.resize((target_w, target_h), Image.Resampling.LANCZOS).filter(ImageFilter.GaussianBlur(radius=25))
+            
+            # Scale raw image to fit height cleanly inside 16:9 canvas
+            scale = min(target_w / raw_w, target_h / raw_h)
+            fit_w = int(raw_w * scale)
+            fit_h = int(raw_h * scale)
+            fitted_img = raw_img.resize((fit_w, fit_h), Image.Resampling.LANCZOS)
+            
+            pos_x = (target_w - fit_w) // 2
+            pos_y = (target_h - fit_h) // 2
+            bg.paste(fitted_img, (pos_x, pos_y), fitted_img)
+            img = bg
+            width, height = target_w, target_h
+        else:
+            img = raw_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+            width, height = target_w, target_h
 
         if os.path.exists(LOGO_PATH):
             logo_raw = Image.open(LOGO_PATH).convert("RGBA")
             logo_cropped = _crop_logo_tight(logo_raw)
 
-            # Target logo width relative to image width (around 140-150px)
-            target_w = min(150, int(width * 0.15))
-            w_percent = target_w / float(logo_cropped.size[0])
-            target_h = int(float(logo_cropped.size[1]) * float(w_percent))
-            logo_resized = logo_cropped.resize((target_w, target_h), Image.Resampling.LANCZOS)
+            # Target logo width relative to image width (around 150px)
+            target_logo_w = 150
+            w_percent = target_logo_w / float(logo_cropped.size[0])
+            target_logo_h = int(float(logo_cropped.size[1]) * float(w_percent))
+            logo_resized = logo_cropped.resize((target_logo_w, target_logo_h), Image.Resampling.LANCZOS)
 
             # Snug padding
             padding_x = 10
             padding_y = 6
-            badge_w = target_w + (padding_x * 2)
-            badge_h = target_h + (padding_y * 2)
+            badge_w = target_logo_w + (padding_x * 2)
+            badge_h = target_logo_h + (padding_y * 2)
 
-            margin = 22
+            margin = 24
             x1 = width - margin - badge_w
             y1 = margin
             x2 = width - margin
@@ -81,17 +106,16 @@ def apply_smart_logo_watermark(image_path, output_path=None):
             badge_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
             draw = ImageDraw.Draw(badge_layer)
 
-            # Subtle drop shadow
-            draw.rounded_rectangle([x1 + 1, y1 + 1, x2 + 1, y2 + 1], radius=8, fill=(0, 0, 0, 50))
-            # Clean frosted white pill with saffron accent border
-            draw.rounded_rectangle([x1, y1, x2, y2], radius=8, fill=(255, 255, 255, 235), outline=(232, 84, 10, 220), width=1)
+            # Subtle drop shadow & frosted white badge with saffron border
+            draw.rounded_rectangle([x1 + 1, y1 + 1, x2 + 1, y2 + 1], radius=8, fill=(0, 0, 0, 60))
+            draw.rounded_rectangle([x1, y1, x2, y2], radius=8, fill=(255, 255, 255, 240), outline=(232, 84, 10, 220), width=1)
 
             img = Image.alpha_composite(img, badge_layer)
             img.paste(logo_resized, (x1 + padding_x, y1 + padding_y), logo_resized)
 
         # Apply subtle sharpening and export as WebP
         final_img = img.convert("RGB").filter(ImageFilter.UnsharpMask(radius=1.0, percent=110, threshold=2))
-        final_img.save(output_path, "WEBP", quality=88)
+        final_img.save(output_path, "WEBP", quality=90)
         return output_path
     except Exception as e:
         print(f"Warning: Watermarking failed ({e}), continuing with base image.")
@@ -102,10 +126,14 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
     """
     Direct clean prompt to Google Vertex AI Gemini / Imagen (Uses ₹28,000 credit balance)
     """
-    print(f"\n[Vertex AI Image Engine] Generating image for: '{prompt_text}'")
+    print(f"\n[Vertex AI Image Engine] Generating 16:9 rich visual for: '{prompt_text}'")
     
-    # Simple, direct, beautiful spiritual command
-    clean_prompt = f"A beautiful, sacred, high quality divine Hindu spiritual featured image for: {prompt_text}"
+    # Rich, detailed, 16:9 widescreen spiritual infographic & divine art prompt
+    clean_prompt = (
+        f"A rich, highly-detailed 16:9 wide landscape spiritual featured banner and infographic for Hindu article: '{prompt_text}'. "
+        f"Wide 16:9 panoramic composition with central divine Hindu deity, sacred golden temple atmosphere, ornate Vedic decorative elements, "
+        f"warm ambient diya illumination, fresh marigold flowers, crystal clear 8k resolution. Wide landscape 16:9 format."
+    )
 
     temp_raw = "temp_raw_gen.jpg"
 
@@ -119,6 +147,7 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
     try:
         from google import genai
         from google.genai import types
+        import time
 
         # Prioritize Account B Vertex AI for Image Generation (Uses the ₹28,000 Credit Balance)
         if gcp_project and (os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv("GCP_SA_KEY")):
@@ -131,26 +160,28 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
             client = None
 
         if client:
-            # 1. Primary: Google Gemini 2.5 Flash Image (Direct Vertex AI Multimodal Generation)
-            try:
-                response = client.models.generate_content(
-                    model='gemini-2.5-flash-image',
-                    contents=clean_prompt,
-                    config=types.GenerateContentConfig(
-                        response_modalities=["IMAGE"],
-                        candidate_count=1,
+            # 1. Primary: Google Gemini 2.5 Flash Image with retry handling
+            for attempt in range(2):
+                try:
+                    response = client.models.generate_content(
+                        model='gemini-2.5-flash-image',
+                        contents=clean_prompt,
+                        config=types.GenerateContentConfig(
+                            response_modalities=["IMAGE"],
+                            candidate_count=1,
+                        )
                     )
-                )
-                if response and response.candidates:
-                    for part in response.candidates[0].content.parts:
-                        if hasattr(part, 'inline_data') and part.inline_data:
-                            img_bytes = part.inline_data.data
-                            with open(temp_raw, "wb") as f:
-                                f.write(img_bytes)
-                            print("[OK] Successfully generated image via Google Gemini 2.5 Flash Image (Vertex AI)!")
-                            return apply_smart_logo_watermark(temp_raw, output_filename)
-            except Exception as e_flash:
-                print(f"[Vertex AI Gemini 2.5 Flash Image Attempt Note]: {e_flash}")
+                    if response and response.candidates:
+                        for part in response.candidates[0].content.parts:
+                            if hasattr(part, 'inline_data') and part.inline_data:
+                                img_bytes = part.inline_data.data
+                                with open(temp_raw, "wb") as f:
+                                    f.write(img_bytes)
+                                print("[OK] Successfully generated image via Google Gemini 2.5 Flash Image (Vertex AI)!")
+                                return apply_smart_logo_watermark(temp_raw, output_filename)
+                except Exception as e_flash:
+                    print(f"[Vertex AI Gemini 2.5 Flash Image Attempt {attempt+1} Note]: {e_flash}")
+                    time.sleep(3)
 
             # 2. Secondary: Google Imagen 3 fallback
             try:
