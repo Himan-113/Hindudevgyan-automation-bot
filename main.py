@@ -405,23 +405,58 @@ def compress_image(temp_filepath, output_filename="featured_image.webp", headlin
     return apply_smart_logo_watermark(temp_filepath, output_filename)
 
 
+WP_CATEGORY_MAP = {
+    "festivals & vrat": 95,
+    "festivals and vrat": 95,
+    "festivals": 95,
+    "festival": 95,
+    "daily panchang": 105,
+    "panchang": 105,
+    "gita wisdom": 100,
+    "gita": 100,
+    "mantras & chants": 108,
+    "mantras": 108,
+    "mantra": 108,
+    "temples & pilgrimage": 102,
+    "temples": 102,
+    "temple": 102,
+    "astrology & horoscope": 103,
+    "astrology": 103,
+    "horoscope": 103,
+    "vedic wisdom": 94,
+    "mythology": 93,
+    "spiritual news": 107,
+    "daily sadhana": 96,
+    "other traditions": 97
+}
+
 def get_or_create_category(category_name):
     clean_name = clean_category_name(category_name)
+    clean_key = clean_name.lower().replace("&amp;", "&").strip()
+    
+    if clean_key in WP_CATEGORY_MAP:
+        return WP_CATEGORY_MAP[clean_key]
+        
+    for key, cat_id in WP_CATEGORY_MAP.items():
+        if key in clean_key or clean_key in key:
+            return cat_id
+
     categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-
-    response = requests.get(categories_url, params={"search": clean_name}, auth=auth)
-    if response.status_code == 200:
-        categories = response.json()
-        for cat in categories:
-            if cat['name'].lower() == clean_name.lower():
-                return cat['id']
-
-    post_data = {"name": clean_name}
-    response = requests.post(categories_url, json=post_data, auth=auth)
-    if response.status_code == 201:
-        return response.json()['id']
-    return None
+    try:
+        response = requests.get(categories_url, params={"per_page": 100}, auth=auth, timeout=10)
+        if response.status_code == 200:
+            for cat in response.json():
+                if cat['name'].replace("&amp;", "&").lower().strip() == clean_key:
+                    return cat['id']
+        post_res = requests.post(categories_url, json={"name": clean_name}, auth=auth, timeout=10)
+        if post_res.status_code == 201:
+            return post_res.json()['id']
+        elif post_res.status_code == 400:
+            return post_res.json().get("data", {}).get("term_id", 94)
+    except Exception:
+        pass
+    return 94  # Default to Vedic Wisdom instead of Uncategorized
 
 
 def upload_image_to_wp(image_path, alt_text=""):

@@ -222,11 +222,35 @@ def enhance_and_fix_posts():
             print("  -> Skipped (Upload failed).", flush=True)
             continue
 
-        # 5. Attach new Featured Media to Post
+        # 5. Determine proper Category if post is currently Uncategorized
+        current_cats = post.get('categories', [])
+        update_payload = {"featured_media": media_id}
+        
+        # If uncategorized or missing, intelligently resolve correct category ID
+        if not current_cats or current_cats == [1]:
+            h_lower = (headline + " " + slug).lower()
+            if any(k in h_lower for k in ["panchang", "tithi", "nakshatra", "shubh muhurat", "aaj ka panchang"]):
+                resolved_cat_id = 105  # Daily Panchang
+            elif any(k in h_lower for k in ["gita", "verse", "chapter", "shloka", "arjuna"]):
+                resolved_cat_id = 100  # Gita Wisdom
+            elif any(k in h_lower for k in ["mantra", "stotram", "chalisa", "beej", "jaap", "chant"]):
+                resolved_cat_id = 108  # Mantras & Chants
+            elif any(k in h_lower for k in ["ekadashi", "vrat", "somwar", "festival", "jayanti", "raksha", "rakhi", "diwali", "panchami", "shivratri", "navratri", "pradosh", "purnima", "amavasya"]):
+                resolved_cat_id = 95   # Festivals & Vrat
+            elif any(k in h_lower for k in ["horoscope", "astrology", "rashi", "zodiac", "retrograde", "shani", "mercury", "graha"]):
+                resolved_cat_id = 103  # Astrology & Horoscope
+            elif any(k in h_lower for k in ["temple", "mandir", "kedarnath", "kashi", "dham", "puri", "ayodhya", "somnath", "badrinath"]):
+                resolved_cat_id = 102  # Temples & Pilgrimage
+            else:
+                resolved_cat_id = 94   # Vedic Wisdom
+                
+            update_payload["categories"] = [resolved_cat_id]
+
+        # Attach new Featured Media and assigned Category to Post
         update_url = f"{WP_URL}/wp-json/wp/v2/posts/{post_id}"
-        res = requests.post(update_url, json={"featured_media": media_id}, auth=auth)
+        res = requests.post(update_url, json=update_payload, auth=auth)
         if res.status_code == 200:
-            print(f"  -> SUCCESS: Attached Branded 8K WebP (Media #{media_id}) to Post #{post_id}!", flush=True)
+            print(f"  -> SUCCESS: Attached Branded 8K WebP (Media #{media_id}) & Category #{update_payload.get('categories', current_cats)} to Post #{post_id}!", flush=True)
             success_count += 1
         else:
             print(f"  -> Failed to update post. Status: {res.status_code}", flush=True)

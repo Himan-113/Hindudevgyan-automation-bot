@@ -282,17 +282,7 @@ def upload_image_to_wp(image_path, alt_text=""):
 
 
 def get_or_create_category(category_name="Daily Panchang"):
-    categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
-    auth = (WP_USERNAME, WP_APP_PASSWORD)
-    response = requests.get(categories_url, params={"search": category_name}, auth=auth)
-    if response.status_code == 200:
-        for cat in response.json():
-            if cat['name'].lower() == category_name.lower():
-                return cat['id']
-    response = requests.post(categories_url, json={"name": category_name}, auth=auth)
-    if response.status_code == 201:
-        return response.json()['id']
-    return None
+    return 105  # Daily Panchang is ID 105
 
 
 def publish_wp_post(data, astro_data, media_id, category_id):

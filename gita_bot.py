@@ -292,21 +292,7 @@ def upload_image_to_wp(image_path, alt_text=""):
 
 
 def get_or_create_category(category_name="Gita Wisdom"):
-    categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
-    auth = (WP_USERNAME, WP_APP_PASSWORD)
-
-    response = requests.get(categories_url, params={"search": category_name}, auth=auth)
-    if response.status_code == 200:
-        categories = response.json()
-        for cat in categories:
-            if cat['name'].lower() == category_name.lower():
-                return cat['id']
-
-    post_data = {"name": category_name}
-    response = requests.post(categories_url, json=post_data, auth=auth)
-    if response.status_code == 201:
-        return response.json()['id']
-    return None
+    return 100  # Gita Wisdom is ID 100
 
 
 def publish_wp_post(data, media_id, category_id):

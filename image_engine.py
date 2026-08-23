@@ -170,9 +170,9 @@ def apply_smart_logo_watermark(image_path, output_path=None):
             img = Image.alpha_composite(img, badge_layer)
             img.paste(logo_resized, (x1 + padding_x, y1 + padding_y), logo_resized)
 
-        # Apply subtle sharpening and export as WebP
-        final_img = img.convert("RGB").filter(ImageFilter.UnsharpMask(radius=1.0, percent=110, threshold=2))
-        final_img.save(output_path, "WEBP", quality=90)
+        # Apply professional high-clarity unsharp mask and export as ultra-high quality WebP
+        final_img = img.convert("RGB").filter(ImageFilter.UnsharpMask(radius=1.2, percent=140, threshold=1))
+        final_img.save(output_path, "WEBP", quality=98, method=6)
         return output_path
     except Exception as e:
         print(f"Warning: Watermarking failed ({e}), continuing with base image.")
@@ -185,11 +185,11 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
     """
     print(f"\n[Vertex AI Image Engine] Generating 16:9 rich visual for: '{prompt_text}'")
     
-    # Rich, detailed, 16:9 widescreen spiritual infographic & divine art prompt
+    # Rich, detailed, 16:9 widescreen spiritual infographic & divine art prompt with razor-sharp clarity
     clean_prompt = (
         f"A rich, highly-detailed 16:9 wide landscape spiritual featured banner and infographic for Hindu article: '{prompt_text}'. "
         f"Wide 16:9 panoramic composition with central divine Hindu deity, sacred golden temple atmosphere, ornate Vedic decorative elements, "
-        f"warm ambient diya illumination, fresh marigold flowers, crystal clear 8k resolution. Wide landscape 16:9 format."
+        f"warm ambient diya illumination, fresh marigold flowers, ultra-sharp focus, crisp sacred iconography, clean high-contrast edges, no blur, no haze, 8k resolution. Wide landscape 16:9 format."
     )
 
     temp_raw = "temp_raw_gen.jpg"

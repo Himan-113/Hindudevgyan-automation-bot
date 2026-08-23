@@ -227,18 +227,43 @@ def upload_image_to_wp(image_path, alt_text=""):
         return media_id
     return None
 
+WP_CATEGORY_MAP = {
+    "festivals & vrat": 95,
+    "festivals and vrat": 95,
+    "festivals": 95,
+    "festival": 95,
+    "daily panchang": 105,
+    "panchang": 105,
+    "gita wisdom": 100,
+    "mantras & chants": 108,
+    "temples & pilgrimage": 102,
+    "astrology & horoscope": 103,
+    "vedic wisdom": 94,
+    "mythology": 93,
+    "spiritual news": 107
+}
+
 def get_or_create_category(category_name="Festivals & Vrat"):
+    clean_key = category_name.lower().replace("&amp;", "&").strip()
+    if clean_key in WP_CATEGORY_MAP:
+        return WP_CATEGORY_MAP[clean_key]
+    
     categories_url = f"{WP_URL}/wp-json/wp/v2/categories"
     auth = (WP_USERNAME, WP_APP_PASSWORD)
-    response = requests.get(categories_url, params={"search": category_name}, auth=auth)
-    if response.status_code == 200:
-        for cat in response.json():
-            if cat['name'].lower() == category_name.lower():
-                return cat['id']
-    response = requests.post(categories_url, json={"name": category_name}, auth=auth)
-    if response.status_code == 201:
-        return response.json()['id']
-    return None
+    try:
+        response = requests.get(categories_url, params={"per_page": 100}, auth=auth, timeout=10)
+        if response.status_code == 200:
+            for cat in response.json():
+                if cat['name'].replace("&amp;", "&").lower().strip() == clean_key:
+                    return cat['id']
+        res_post = requests.post(categories_url, json={"name": category_name}, auth=auth, timeout=10)
+        if res_post.status_code == 201:
+            return res_post.json()['id']
+        elif res_post.status_code == 400:
+            return res_post.json().get("data", {}).get("term_id", 95)
+    except Exception:
+        pass
+    return 95
 
 def publish_wp_post(data, media_id, category_id):
     print("Publishing Weekly Festival Guide to WordPress...")
