@@ -258,6 +258,9 @@ def fetch_recent_site_headlines():
 def deduplicate_and_select(raw_news):
     print(f"Phase 2: Editor-in-Chief AI analyzing {len(raw_news)} raw headlines for semantic deduplication...")
 
+    ist_now = datetime.now(pytz.timezone('Asia/Kolkata'))
+    today_str = ist_now.strftime('%A, %d %B %Y')
+
     already_published = fetch_recent_site_headlines()
     published_summary = "\n".join([f"- {t}" for t in already_published[:15]])
 
@@ -267,14 +270,16 @@ def deduplicate_and_select(raw_news):
 
     prompt = f"""
     You are the elite Editor-in-Chief of HinduDevGyan, a viral Vedic & Hindu Spirituality portal.
+    TODAY'S ACTUAL DATE (IST): {today_str}
+
     Below are trending raw headlines from Indian news networks. Many cover the EXACT SAME EVENT.
 
     ALREADY PUBLISHED ON OUR SITE (DO NOT REPEAT ANY OF THESE TOPICS):
     {published_summary if published_summary else "None"}
 
     Your Task:
-    1. STRICTLY EXCLUDE any story that covers the same deity, festival, or theme as the 'ALREADY PUBLISHED' list above (e.g. if Nag Panchami or Sawan Fast was published, DO NOT select it again!).
-    2. Semantically group all duplicates in the raw headlines.
+    1. STRICTLY EXCLUDE any story that covers the same deity, festival, or theme as the 'ALREADY PUBLISHED' list above.
+    2. REAL-TIME DATE RELEVANCE: Today is {today_str}. NEVER select past-day daily horoscopes or yesterday's events (e.g., if today is Sunday, NEVER select a Saturday horoscope). Ensure all day-specific guides match TODAY ({ist_now.strftime('%A')}) or upcoming events.
     3. Select 3 completely DISTINCT, high-CTR, fresh, and viral topics (e.g., Temple travel itineraries, temple mysteries, planetary remedies, or unexplored spiritual news).
     4. Return ONLY a JSON array of 3 objects containing the original title and link of the chosen stories.
 
@@ -320,17 +325,23 @@ def clean_category_name(raw_category):
 
 def rewrite_article_and_image_prompt(original_title):
     print("Phase 3: Scholar AI & Marketing Editor writing article and designing visual image prompt...")
+    ist_now = datetime.now(pytz.timezone('Asia/Kolkata'))
+    today_str = ist_now.strftime('%A, %d %B %Y')
     prompt = f"""
-    You are an elite Hindu Religious Scholar, Vedic Astrologer, and SEO Editor-in-Chief. Write a deeply engaging, authoritative, and SEO-optimized article in ENGLISH based on this Hindi news/topic:
+    You are an elite Hindu Religious Scholar, Spiritual Travel Journalist, and Google Discover SEO Editor-in-Chief. Write a deeply engaging, authoritative, and high-CTR viral article in ENGLISH based on this Hindi news/topic:
     "{original_title}"
 
     CRITICAL EDITORIAL & SEO REQUIREMENTS:
-    1. Language: Premium, engaging English.
-    2. Headline (H1) Formula: High-Search Intent + Trending Hook.
-       - Structure: `[Deity/Festival/Rashi Name 2026]: [High-Search Intent - Muhurat / Vidhi / Predictions / Spiritual Meaning]`
-       - Examples of GOOD titles: "Sawan Somwar & Nag Panchami 2026: Auspicious Shubh Muhurat, Puja Vidhi & Shiva Mantras", "Aquarius Weekly Horoscope (Aug 17–22, 2026): Kumbh Rashi Career Shifts & Shani Remedies", "Amarnath Yatra 2026: Chhari Mubarak Dates, Holy Cave Timings & Weather Guide".
-       - BANNED ABSTRACT WORDS: NEVER use words like "Alchemy", "Triumph", "Crossroads", "Tapestry", "Symphony", "Delve". Keep titles clear, powerful, and directly matching what people search on Google & Discover.
-    3. URL Slug: Clean 4-6 word hyphenated slug (e.g. sawan-somwar-nag-panchami-muhurat-vidhi).
+    1. Language: Premium, highly engaging, conversational English.
+    2. Date Awareness: Today is {today_str}. All horoscope dates, tithis, and muhurats MUST match today's date ({today_str}) or future upcoming dates. NEVER write about a past day.
+    2. Headline (H1) Formula — Google Discover High-CTR & Curiosity Hook:
+       - Combine Search Intent + Emotional / Curiosity / Urgency Trigger.
+       - FESTIVALS/VRATS: "[Festival Name 2026]: Auspicious Muhurat, The 1 Mistake to Avoid & Sacred Vidhi"
+       - ASTROLOGY/HOROSCOPE: "[Graha Transit / Rashi Name 2026]: Career Shifts & Shani Remedies to Avoid Trouble"
+       - TEMPLES/TRAVEL: "[Temple/Dham Name] Darshan Guide 2026: VIP Timings, Nearest Hotels, Famous Prasad & 2-Day Itinerary"
+       - GITA/MANTRAS: "The 1 Powerful [Mantra/Gita Verse] That Solves Anxiety & Brings Instant Abundance"
+       - BANNED ABSTRACT WORDS: NEVER use words like "Alchemy", "Triumph", "Crossroads", "Tapestry", "Symphony", "Delve". Keep headlines clear, crisp, and high-impact.
+    3. URL Slug: Clean 4-6 word hyphenated slug (e.g. kedarnath-yatra-darshan-guide-hotels-itinerary).
     4. Internal Linking: Naturally embed at least 3 internal HTML links:
        - Kundli / Horoscope -> <a href="https://hindudevgyan.in/free-kundli/">
        - Vastu -> <a href="https://hindudevgyan.in/category/vastu/">
@@ -338,35 +349,48 @@ def rewrite_article_and_image_prompt(original_title):
        - Bhagavad Gita / Karma -> <a href="https://hindudevgyan.in/category/gita-wisdom/">
        - HinduDevGyan -> <a href="https://hindudevgyan.in/">
     5. High E-E-A-T Content Structure in HTML:
-       - Top: <h3>हिंदी सारांश:</h3> with 3 clear bullet points summarizing the event for mobile/WhatsApp readers.
-       - <h2>Significance & Vedic Context</h2>: Deep spiritual and mythological background.
-       - <blockquote>: An authentic Sanskrit Shloka with English transliteration and word-by-word meaning.
-       - <h2>Rituals, Vidhi & Muhurat</h2>: Step-by-step puja vidhi, timing table (if applicable), and Dos & Don'ts.
-       - <h2>Frequently Asked Questions</h2>: 3 crisp Q&A pairs (<h3> and <p>) optimized for Google FAQ Rich Snippets.
+       - Top: <h3>हिंदी सारांश:</h3> with 3 clear bullet points summarizing key takeaways for quick reading.
+       
+       [IF TOPIC IS A TEMPLE, DHAM, PILGRIMAGE, OR SPIRITUAL TRAVEL GUIDE]:
+       - <h2>Spiritual Significance & Sacred Legends of the Temple</h2>
+       - <h2>Darshan Timings, VIP Pass & Aarti Schedule 2026</h2>
+       - <h2>How to Reach & Local Transport Route Map</h2> (Nearest Airport, Railway Station, Taxi/Bus guidance)
+       - <h2>Best Hotels, Dharamshalas & Stay Options Near the Temple</h2> (Budget Dharamshalas vs comfortable family stays)
+       - <h2>Famous Local Prasad & Authentic Sattvic Food to Try</h2> (Iconic Temple Bhog, sacred sweets & must-try local eateries)
+       - <h2>Complete 1-2 Day Itinerary & Nearby Sacred Places to Visit</h2> (What else to visit within 10-30 km)
+       - <h2>Inner Sanctum Rules, Dress Code & Dos and Don'ts</h2> (Locker facilities, mobile rules, footwear guidelines)
+       - <h2>Frequently Asked Questions</h2> (3 crisp Q&A pairs for Google FAQ rich snippets)
+
+       [IF TOPIC IS A FESTIVAL, VRAT, ASTROLOGY, GITA, OR MANTRA]:
+       - <h2>Significance & Vedic Shastric Context</h2> (Deep spiritual background)
+       - <blockquote> An authentic Sanskrit Shloka/Mantra with English transliteration and word-by-word meaning.
+       - <h2>Step-by-Step Vidhi, Shubh Muhurat & Planetary Influences</h2> (Practical timing table and rules)
+       - <h2>Important Dos & Don'ts to Avoid Shastric Karma Errors</h2>
+       - <h2>Frequently Asked Questions</h2> (3 crisp Q&A pairs for Google FAQ rich snippets)
+
     6. Category: Choose ONE from: Festivals & Vrat, Temples & Pilgrimage, Astrology & Horoscope, Vedic Wisdom, Gita Wisdom, Panchang, Mantras & Chants, Mythology, Spiritual News.
     7. Ecommerce Tag: Choose ONE: "shiva", "pooja", "gita", "general".
-    8. Visual AI Image Prompt: A magnificent, 20-30 word visual scene description for Google Imagen 3 featuring a glorious Hindu Deity or Grand Illuminated Sacred Temple.
-       - If a Deity (Shiva, Krishna, Rama, Vishnu, Ganesha, Hanuman, Durga, Lakshmi): describe the deity in a serene divine posture with a glowing golden ethereal aura, ornate Vedic jewels, and sacred attributes (flute, trishul, bow, lotus).
-       - If Horoscope / Astrology / Panchang: describe Lord Ganesha or Sun God Surya seated in a radiant golden cosmic starfield with glowing celestial constellations.
-       - If Temple / Ritual / Vrat: describe the presiding Supreme Deity giving divine blessings amidst floating lotus flowers and glowing golden temple lighting, OR the grand illuminated Himalayan/Vedic temple facade.
-       - CRITICAL STYLE RESTRICTIONS: The central subject MUST be a glorious divine figure or grand temple. NEVER generate an empty room, stone wall, or plain brass lamp alone. Strictly NO text, NO watermarks, NO modern objects.
-    9. Image Alt Text: Short descriptive alt text containing primary subject (e.g. "Lord Shiva and sacred crescent moon in divine meditation").
+    8. Visual AI Image Prompt: A magnificent 16:9 visual scene description for Google Vertex AI Gemini/Imagen:
+       - If Temple/Travel: Grand illuminated Himalayan or ancient stone Vedic temple with glowing golden diyas, sacred river ghat, mountain mist, and divine celestial atmosphere.
+       - If Deity/Festival: Divine Hindu Deity in celestial golden aura with sacred attributes, fresh marigold flowers, and Vedic temple sanctum.
+       - Strictly NO watermarks, NO blurry elements, ultra-sharp 8k resolution.
+    9. Image Alt Text: Short descriptive alt text containing primary subject.
     10. Short Image Banner Text: 3-5 word concise headline.
     11. SEO Meta: "meta_title" (<60 chars), "meta_description" (<155 chars), and "focus_keyword".
 
     Format output EXACTLY as valid JSON:
     {{
-        "headline": "Your English Headline Here",
-        "slug": "your-english-slug-here",
+        "headline": "Your High-CTR English Headline Here",
+        "slug": "your-clean-slug-here",
         "category": "Temples & Pilgrimage",
         "ecommerce_tag": "shiva",
-        "image_prompt": "Detailed concrete visual scene for FLUX.1",
+        "image_prompt": "Detailed concrete 16:9 visual scene",
         "image_alt_text": "Short literal alt description",
         "image_banner_text": "SHORT 3-5 WORD BANNER TITLE",
         "meta_title": "SEO title under 60 chars",
         "meta_description": "SEO description under 155 chars",
         "focus_keyword": "Focus keyword phrase",
-        "content": "<h3>हिंदी सारांश:</h3><ul><li>Point 1</li><li>Point 2</li></ul><h2>Significance & Vedic Context</h2><p>...</p>"
+        "content": "<h3>हिंदी सारांश:</h3><ul><li>Point 1</li></ul><h2>...</h2>"
     }}
     """
 
