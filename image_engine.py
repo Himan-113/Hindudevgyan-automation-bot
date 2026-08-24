@@ -119,9 +119,9 @@ def apply_smart_logo_watermark(image_path, output_path=None):
         raw_img = Image.open(image_path).convert("RGBA")
         trimmed_img = _trim_black_bars(raw_img)
         
-        # Enforce proportional 16:9 widescreen canvas without ANY stretching or distortion
-        target_w = 1600
-        target_h = 900
+        # Enforce proportional 16:9 widescreen canvas (1200x675) with zero upscaling blur or distortion
+        target_w = 1200
+        target_h = 675
         w, h = trimmed_img.size
         target_ratio = target_w / target_h
         current_ratio = w / h
@@ -142,8 +142,8 @@ def apply_smart_logo_watermark(image_path, output_path=None):
             logo_raw = Image.open(LOGO_PATH).convert("RGBA")
             logo_cropped = _crop_logo_tight(logo_raw)
 
-            # Target logo width relative to image width (around 150px)
-            target_logo_w = 150
+            # Target logo width relative to image width (around 140px)
+            target_logo_w = 140
             w_percent = target_logo_w / float(logo_cropped.size[0])
             target_logo_h = int(float(logo_cropped.size[1]) * float(w_percent))
             logo_resized = logo_cropped.resize((target_logo_w, target_logo_h), Image.Resampling.LANCZOS)
@@ -154,7 +154,7 @@ def apply_smart_logo_watermark(image_path, output_path=None):
             badge_w = target_logo_w + (padding_x * 2)
             badge_h = target_logo_h + (padding_y * 2)
 
-            margin = 24
+            margin = 20
             x1 = width - margin - badge_w
             y1 = margin
             x2 = width - margin
@@ -170,8 +170,8 @@ def apply_smart_logo_watermark(image_path, output_path=None):
             img = Image.alpha_composite(img, badge_layer)
             img.paste(logo_resized, (x1 + padding_x, y1 + padding_y), logo_resized)
 
-        # Apply professional high-clarity unsharp mask and export as ultra-high quality WebP
-        final_img = img.convert("RGB").filter(ImageFilter.UnsharpMask(radius=1.2, percent=140, threshold=1))
+        # Export as clean ultra-high fidelity WebP (smooth skin, no harsh pixelation)
+        final_img = img.convert("RGB")
         final_img.save(output_path, "WEBP", quality=98, method=6)
         return output_path
     except Exception as e:
@@ -185,11 +185,12 @@ def generate_hd_featured_image(prompt_text, category="Spiritual News", output_fi
     """
     print(f"\n[Vertex AI Image Engine] Generating 16:9 rich visual for: '{prompt_text}'")
     
-    # Rich, detailed, 16:9 widescreen spiritual infographic & divine art prompt with razor-sharp clarity
+    # Exquisite masterwork devotional painting prompt for smooth, photorealistic deity art with zero noise
     clean_prompt = (
-        f"A rich, highly-detailed 16:9 wide landscape spiritual featured banner and infographic for Hindu article: '{prompt_text}'. "
-        f"Wide 16:9 panoramic composition with central divine Hindu deity, sacred golden temple atmosphere, ornate Vedic decorative elements, "
-        f"warm ambient diya illumination, fresh marigold flowers, ultra-sharp focus, crisp sacred iconography, clean high-contrast edges, no blur, no haze, 8k resolution. Wide landscape 16:9 format."
+        f"An exquisite, masterwork Indian devotional painting in 16:9 wide landscape for Hindu topic: '{prompt_text}'. "
+        f"Wide 16:9 panoramic composition. Center the complete divine deity or illuminated Vedic temple in the frame with generous breathing room on all sides so all crowns, attributes, and temple spires are fully visible. "
+        f"Serene divine countenance, radiant smooth skin, intricate gold zardozi garments, sacred glowing golden aura, warm brass diya illumination, floating pink lotus blossoms, ornate Vedic temple architecture. "
+        f"Masterpiece devotional art style, smooth skin, vivid authentic colors, zero grain, zero pixelation. Strictly NO text, NO letters, NO words, NO unreadable boxes, NO borders."
     )
 
     temp_raw = "temp_raw_gen.jpg"
