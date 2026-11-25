@@ -36,14 +36,14 @@ else:
 def safe_generate_content(prompt):
     """
     Robustly calls Gemini API using a fallback chain of models:
-    gemini-2.5-flash -> gemini-2.5-flash-lite -> gemini-3.6-flash -> gemini-flash-latest.
+    gemini-3.8-flash -> gemini-3.5-flash -> gemini-3-flash.
     Automatically retries on 429 (quota/rate limit) and 503 (high demand) errors.
     """
     if not client:
         print("Error: Gemini client not initialized (GEMINI_API_KEY missing).")
         return None
 
- models_to_try = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3-flash']
+    models_to_try = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3-flash']
     last_error = None
 
     for model in models_to_try:
