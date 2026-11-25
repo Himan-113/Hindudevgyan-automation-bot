@@ -43,13 +43,7 @@ def safe_generate_content(prompt):
         print("Error: Gemini client not initialized (GEMINI_API_KEY missing).")
         return None
 
-    models_to_try = [
-        'gemini-2.5-flash',
-        'gemini-2.5-flash-lite',
-        'gemini-1.5-flash',
-        'gemini-1.5-pro',
-        'gemini-flash-latest'
-    ]
+ models_to_try = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3-flash']
     last_error = None
 
     for model in models_to_try:
