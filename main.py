@@ -35,7 +35,8 @@ else:
 
 def safe_generate_content(prompt):
     """
-    Robustly calls Gemini API using a fallback chain of models compatible with both Vertex AI and Google AI Studio.
+    Robustly calls Gemini API using a fallback chain of models:
+    gemini-2.5-flash -> gemini-2.5-flash-lite -> gemini-3.6-flash -> gemini-flash-latest.
     Automatically retries on 429 (quota/rate limit) and 503 (high demand) errors.
     """
     if not client:
@@ -43,11 +44,11 @@ def safe_generate_content(prompt):
         return None
 
     models_to_try = [
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
         'gemini-1.5-flash',
-        'gemini-1.5-flash-002',
         'gemini-1.5-pro',
-        'gemini-2.0-flash',
-        'gemini-3.8-flash'
+        'gemini-flash-latest'
     ]
     last_error = None
 
@@ -700,3 +701,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+for this main file do we need to chnage the gemini models? remove outdated
