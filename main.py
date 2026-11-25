@@ -701,4 +701,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-for this main file do we need to chnage the gemini models? remove outdated
